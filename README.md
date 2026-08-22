@@ -142,7 +142,7 @@ table:{tableId}:orders
    ```
    Демо подаци уносе ресторан „Стари Млин" са менијем, столовима, особљем и историјом
    поруџбина. Лозинка за свако особље је `password`, а корисничка имена су
-   `menadzer.starimlin`, `kasir1.starimlin`, `kuvar1.starimlin`, `konobar1.starimlin`
+   `menadzer.starimlin`, `kasir1.starimlin`, `kuvar1.starimlin`, `konobar1.starimlin`, `fadmin`
    и слична - цео списак је у табели `users` у самој скрипти.
 
 ### Backend
