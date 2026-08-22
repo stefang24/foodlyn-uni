@@ -1,0 +1,55 @@
+<div class="login-wrapper">
+    <div class="panel">
+        <img src="assets/images/foodlyn.png" alt="Foodlyn" (click)="goToHome()"/>
+        <h1>Login</h1>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+            <div class="field">
+                <label for="identifier">Email or username</label>
+                <input
+                    pInputText
+                    id="identifier"
+                    type="text"
+                    formControlName="identifier"
+                    [class.ng-invalid]="isInvalid('identifier')"
+                    [class.ng-dirty]="isInvalid('identifier')"
+                />
+                @if (isInvalid('identifier')) {
+                    <small class="error-message">{{ getErrorMessage('identifier') }}</small>
+                }
+            </div>
+
+            <div class="field">
+                <label for="password">Password</label>
+                <p-password
+                    id="password"
+                    formControlName="password"
+                    [feedback]="false"
+                    [toggleMask]="true"
+                    [fluid]="true"
+                    [inputStyleClass]="isInvalid('password') ? 'ng-invalid ng-dirty' : ''"
+                />
+                @if (isInvalid('password')) {
+                    <small class="error-message">{{ getErrorMessage('password') }}</small>
+                }
+            </div>
+
+            <button
+                type="submit"
+                [disabled]="loginForm.invalid || loadingService.isLoading(LOGIN_KEY)"
+                class="lgnbtn"
+            >
+                @if (loadingService.isLoading(LOGIN_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                } @else {
+                    Login
+                }
+            </button>
+
+            <p class="alt-link">
+                Don't have an account?
+                <a routerLink="/register">Register now</a>
+            </p>
+        </form>
+    </div>
+</div>

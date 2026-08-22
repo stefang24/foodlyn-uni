@@ -1,0 +1,325 @@
+<div class="overview">
+    <section class="page-header">
+        <div>
+            <h1>Users</h1>
+            <p>All user accounts and their restaurant assignments.</p>
+        </div>
+        <button type="button" class="btn primary" (click)="openCreate()">
+            <i class="pi pi-plus"></i> New account
+        </button>
+    </section>
+
+    <div class="filters">
+        <span class="search-box">
+            <i class="pi pi-search"></i>
+            <input
+                type="text"
+                pInputText
+                placeholder="Search by name, username, email..."
+                [value]="searchText()"
+                (input)="onSearchChange($any($event.target).value)"
+            />
+        </span>
+        <p-select
+            placeholder="Role"
+            [options]="roleOptions"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            [ngModel]="roleFilter()"
+            (ngModelChange)="setRoleFilter($event)"
+            appendTo="body"
+        />
+        <p-select
+            placeholder="Status"
+            [options]="activeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            [ngModel]="activeFilter()"
+            (ngModelChange)="setActiveFilter($event)"
+            appendTo="body"
+        />
+        <p-select
+            placeholder="Restaurant"
+            [options]="restaurantOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            [filter]="true"
+            [ngModel]="restaurantFilter()"
+            (ngModelChange)="setRestaurantFilter($event)"
+            appendTo="body"
+        />
+    </div>
+
+    <p-table
+        [value]="users()"
+        [lazy]="true"
+        [paginator]="true"
+        [rows]="10"
+        [totalRecords]="totalCount()"
+        [loading]="loading()"
+        (onLazyLoad)="onLazyLoad($event)"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        class="p-datatable-sm table-card"
+        dataKey="id"
+    >
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="username">Username <p-sortIcon field="username" /></th>
+                <th pSortableColumn="fullName">Full name <p-sortIcon field="fullName" /></th>
+                <th pSortableColumn="email">Email <p-sortIcon field="email" /></th>
+                <th pSortableColumn="role">Role <p-sortIcon field="role" /></th>
+                <th>Primary restaurant</th>
+                <th>Assignments</th>
+                <th pSortableColumn="isActive">Active <p-sortIcon field="isActive" /></th>
+                <th></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+            <tr>
+                <td>{{ row.username }}</td>
+                <td>{{ (row.firstName || '') + ' ' + (row.lastName || '') }}</td>
+                <td>{{ row.email }}</td>
+                <td>{{ row.role }}</td>
+                <td>{{ restaurantName(row.restaurantId) }}</td>
+                <td>
+                    @if (row.restaurantIds.length) {
+                        <span class="assign-count">{{ row.restaurantIds.length }} restaurant(s)</span>
+                    } @else {
+                        <span class="muted">none</span>
+                    }
+                </td>
+                <td>
+                    <span class="status-pill" [class.active]="row.isActive">
+                        {{ row.isActive ? 'Active' : 'Disabled' }}
+                    </span>
+                </td>
+                <td class="actions">
+                    <button
+                        type="button"
+                        class="icon-btn"
+                        (click)="openEdit(row)"
+                        aria-label="Edit"
+                    >
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="8" class="empty">No users match your filters.</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog
+    [visible]="dialogVisible()"
+    (visibleChange)="$event ? dialogVisible.set(true) : close()"
+    [modal]="true"
+    [style]="{ width: '640px' }"
+    header="Edit user"
+    [dismissableMask]="true"
+>
+    @if (editing) {
+        <form [formGroup]="editForm" (ngSubmit)="save()" class="edit-form">
+            <div class="grid">
+                <div class="field">
+                    <label for="u-first">First name</label>
+                    <input pInputText id="u-first" type="text" formControlName="firstName" />
+                </div>
+                <div class="field">
+                    <label for="u-last">Last name</label>
+                    <input pInputText id="u-last" type="text" formControlName="lastName" />
+                </div>
+                <div class="field">
+                    <label for="u-username">Username *</label>
+                    <input pInputText id="u-username" type="text" formControlName="username" />
+                </div>
+                <div class="field">
+                    <label for="u-email">Email *</label>
+                    <input pInputText id="u-email" type="email" formControlName="email" />
+                </div>
+                <div class="field">
+                    <label for="u-role">Role *</label>
+                    <p-select
+                        id="u-role"
+                        formControlName="role"
+                        [options]="roleOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Select role"
+                        appendTo="body"
+                    />
+                </div>
+                <div class="field">
+                    <label for="u-primary">Primary restaurant</label>
+                    <p-select
+                        id="u-primary"
+                        formControlName="restaurantId"
+                        [options]="restaurantOptions()"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Select"
+                        [showClear]="true"
+                        appendTo="body"
+                    />
+                </div>
+                <div class="field span-2">
+                    <label for="u-assigned">Restaurant assignments</label>
+                    <p-multiselect
+                        id="u-assigned"
+                        formControlName="restaurantIds"
+                        [options]="restaurantOptions()"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Select restaurants"
+                        appendTo="body"
+                        [filter]="true"
+                    />
+                </div>
+                <div class="field toggle-field">
+                    <label for="u-active">Active</label>
+                    <p-toggleswitch id="u-active" formControlName="isActive" />
+                </div>
+            </div>
+
+            <div class="actions-row">
+                <button type="button" class="btn ghost" (click)="close()">Cancel</button>
+                <button
+                    type="submit"
+                    class="btn primary"
+                    [disabled]="editForm.invalid || loadingService.isLoading(UPDATE_USER_KEY)"
+                >
+                    @if (loadingService.isLoading(UPDATE_USER_KEY)) {
+                        <i class="pi pi-spin pi-spinner"></i>
+                    } @else {
+                        Save
+                    }
+                </button>
+            </div>
+        </form>
+    }
+</p-dialog>
+
+<p-dialog
+    [visible]="createDialogVisible()"
+    (visibleChange)="$event ? createDialogVisible.set(true) : closeCreate()"
+    [modal]="true"
+    [style]="{ width: '640px' }"
+    header="New account"
+    [dismissableMask]="true"
+>
+    <form [formGroup]="createForm" (ngSubmit)="createAccount()" class="edit-form">
+        <div class="grid">
+            <div class="field">
+                <label for="n-first">First name</label>
+                <input pInputText id="n-first" type="text" formControlName="firstName" />
+            </div>
+            <div class="field">
+                <label for="n-last">Last name</label>
+                <input pInputText id="n-last" type="text" formControlName="lastName" />
+            </div>
+            <div class="field">
+                <label for="n-username">Username *</label>
+                <input
+                    pInputText
+                    id="n-username"
+                    type="text"
+                    formControlName="username"
+                    [class.ng-invalid]="isInvalid(createForm, 'username')"
+                    [class.ng-dirty]="isInvalid(createForm, 'username')"
+                />
+                @if (isInvalid(createForm, 'username')) {
+                    <small class="error-message">{{ getErrorMessage(createForm, 'username') }}</small>
+                }
+            </div>
+            <div class="field">
+                <label for="n-email">Email *</label>
+                <input
+                    pInputText
+                    id="n-email"
+                    type="email"
+                    formControlName="email"
+                    [class.ng-invalid]="isInvalid(createForm, 'email')"
+                    [class.ng-dirty]="isInvalid(createForm, 'email')"
+                />
+                @if (isInvalid(createForm, 'email')) {
+                    <small class="error-message">{{ getErrorMessage(createForm, 'email') }}</small>
+                }
+            </div>
+            <div class="field">
+                <label for="n-password">Password *</label>
+                <p-password
+                    id="n-password"
+                    formControlName="password"
+                    [feedback]="false"
+                    [toggleMask]="true"
+                    [fluid]="true"
+                    [inputStyleClass]="isInvalid(createForm, 'password') ? 'ng-invalid ng-dirty' : ''"
+                />
+                @if (isInvalid(createForm, 'password')) {
+                    <small class="error-message">{{ getErrorMessage(createForm, 'password') }}</small>
+                }
+            </div>
+            <div class="field">
+                <label for="n-confirm">Confirm password *</label>
+                <p-password
+                    id="n-confirm"
+                    formControlName="confirmPassword"
+                    [feedback]="false"
+                    [toggleMask]="true"
+                    [fluid]="true"
+                    [inputStyleClass]="isInvalid(createForm, 'confirmPassword') || showMismatch() ? 'ng-invalid ng-dirty' : ''"
+                />
+                @if (showMismatch()) {
+                    <small class="error-message">Passwords do not match</small>
+                }
+            </div>
+            <div class="field">
+                <label for="n-role">Role *</label>
+                <p-select
+                    id="n-role"
+                    formControlName="role"
+                    [options]="roleOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select role"
+                    appendTo="body"
+                />
+            </div>
+            <div class="field">
+                <label for="n-primary">Restaurant *</label>
+                <p-select
+                    id="n-primary"
+                    formControlName="restaurantId"
+                    [options]="restaurantOptions()"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select restaurant"
+                    appendTo="body"
+                    [filter]="true"
+                    filterBy="label"
+                />
+            </div>
+        </div>
+
+        <div class="actions-row">
+            <button type="button" class="btn ghost" (click)="closeCreate()">Cancel</button>
+            <button
+                type="submit"
+                class="btn primary"
+                [disabled]="createForm.invalid || loadingService.isLoading(CREATE_ACCOUNT_KEY)"
+            >
+                @if (loadingService.isLoading(CREATE_ACCOUNT_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                } @else {
+                    Create
+                }
+            </button>
+        </div>
+    </form>
+</p-dialog>

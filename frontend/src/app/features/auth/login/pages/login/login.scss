@@ -1,0 +1,115 @@
+:host {
+    display: block;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 10% 5%, rgba(239, 68, 68, 0.15), transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(254, 202, 202, 0.45), transparent 55%),
+        linear-gradient(180deg, #fff5f5, #f8fafc 60%);
+}
+
+.login-wrapper {
+    width: 100dvw;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    box-shadow: 0px 0px 15px 1px rgb(230, 230, 230);
+    border-radius: 10px;
+    padding: 50px 60px;
+    min-width: 550px;
+    background-color: white;
+}
+
+img {
+    width: 300px;
+    cursor: pointer;
+}
+
+h1 {
+    color: black;
+    font-size: 30px;
+    margin: 0;
+    margin-top: 40px;
+    margin-bottom: 20px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 28px;
+    width: 100%;
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+
+        label {
+            color: black;
+            font-weight: 500;
+            font-size: 22px;
+        }
+
+        input,
+        ::ng-deep .p-password,
+        ::ng-deep .p-password input {
+            width: 100%;
+            font-size: 20px;
+            height: 50px;
+        }
+
+        .error-message {
+            color: #e24c4c;
+            font-size: 16px;
+        }
+    }
+}
+
+.lgnbtn {
+    margin-top: 50px;
+    background-color: rgb(125, 7, 7);
+    color: white;
+    font-size: 20px;
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    padding-left: 30px;
+    padding-right: 30px;
+
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.lgnbtn:disabled {
+    background-color: rgb(238, 238, 238);
+    cursor: default;
+    color: gray;
+}
+
+.alt-link {
+    margin: 16px 0 0;
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+
+    a {
+        color: rgb(125, 7, 7);
+        font-weight: 700;
+        cursor: pointer;
+        margin-left: 4px;
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+}

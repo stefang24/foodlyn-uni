@@ -1,0 +1,200 @@
+<div class="landing-wrapper">
+    <div class="panel">
+        <img src="assets/images/foodlyn.png" alt="Foodlyn" class="logo" (click)="goToHome()"/>
+
+        @if (loadingService.isLoading(RESOLVE_KEY)) {
+            <div class="status">
+                <i class="pi pi-spin pi-spinner"></i>
+                <p>Loading table...</p>
+            </div>
+        } @else if (resolveError(); as err) {
+            <div class="status error">
+                <i class="pi pi-exclamation-triangle"></i>
+                <h2>Cannot open this QR</h2>
+                <p>{{ err }}</p>
+                @if (showLoginCta()) {
+                    <button type="button" class="btn primary" (click)="openLogin()">
+                        <i class="pi pi-sign-in"></i> Log in
+                    </button>
+                }
+            </div>
+        } @else if (resolved(); as r) {
+            <div class="welcome">
+                @if (r.restaurantLogoUrl) {
+                    <img [src]="r.restaurantLogoUrl | imageUrl" [alt]="r.restaurantName" class="resto-logo" />
+                }
+                <h1>{{ r.restaurantName }}</h1>
+                <p class="table-label">
+                    Table #{{ r.tableNumber }}
+                    @if (r.tableLabel) {
+                        <span> · {{ r.tableLabel }}</span>
+                    }
+                </p>
+                @if (r.existingSession && r.existingSession.ownerKind === 'Guest' && r.existingSession.cartLines.length > 0) {
+                    <p class="muted">An order at this table was started earlier and never paid.</p>
+                } @else {
+                    <p class="muted">How would you like to continue?</p>
+                }
+            </div>
+
+            @if (r.existingSession && r.existingSession.ownerKind === 'Guest' && r.existingSession.cartLines.length > 0) {
+                <div class="choices">
+                    <button
+                        type="button"
+                        class="btn primary"
+                        (click)="continueExistingOrder()"
+                        [disabled]="loadingService.isLoading(GUEST_KEY)"
+                    >
+                        @if (loadingService.isLoading(GUEST_KEY)) {
+                            <i class="pi pi-spin pi-spinner"></i>
+                        } @else {
+                            <i class="pi pi-shopping-cart"></i>
+                        }
+                        <span>Continue this order</span>
+                        <small>
+                            {{ r.existingSession.cartLines.length }} item(s) · party of {{ r.existingSession.partySize }}
+                        </small>
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn outline"
+                        (click)="restartSession()"
+                        [disabled]="loadingService.isLoading(GUEST_KEY)"
+                    >
+                        <i class="pi pi-refresh"></i>
+                        <span>Start over</span>
+                        <small>Clears the previous cart and starts fresh</small>
+                    </button>
+                </div>
+            } @else {
+                <div class="choices">
+                    <button type="button" class="btn primary" (click)="openLogin()">
+                        <i class="pi pi-sign-in"></i>
+                        <span>I have an account</span>
+                        <small>Earn points and see your order history</small>
+                    </button>
+
+                    <button type="button" class="btn outline" (click)="openRegister()">
+                        <i class="pi pi-user-plus"></i>
+                        <span>Create an account</span>
+                        <small>Takes 30 seconds</small>
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn ghost"
+                        (click)="continueAsGuest()"
+                        [disabled]="loadingService.isLoading(GUEST_KEY)"
+                    >
+                        @if (loadingService.isLoading(GUEST_KEY)) {
+                            <i class="pi pi-spin pi-spinner"></i>
+                        } @else {
+                            <i class="pi pi-user"></i>
+                        }
+                        <span>Continue as guest</span>
+                        <small>No sign-up needed</small>
+                    </button>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<p-dialog
+    [visible]="loginDialog()"
+    (visibleChange)="$event ? loginDialog.set(true) : loginDialog.set(false)"
+    [modal]="true"
+    [style]="{ width: '420px' }"
+    header="Login"
+    [dismissableMask]="true"
+>
+    <form [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="dialog-form">
+        <div class="field">
+            <label for="l-id">Email or username</label>
+            <input pInputText id="l-id" type="text" formControlName="identifier" />
+        </div>
+        <div class="field">
+            <label for="l-pw">Password</label>
+            <p-password id="l-pw" formControlName="password" [feedback]="false" [toggleMask]="true" [fluid]="true" />
+        </div>
+        <div class="actions-row">
+            <button type="button" class="btn ghost small" (click)="loginDialog.set(false)">Cancel</button>
+            <button
+                type="submit"
+                class="btn primary small"
+                [disabled]="loginForm.invalid || loadingService.isLoading(LOGIN_KEY)"
+            >
+                @if (loadingService.isLoading(LOGIN_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                } @else {
+                    Login
+                }
+            </button>
+        </div>
+    </form>
+</p-dialog>
+
+<p-dialog
+    [visible]="registerDialog()"
+    (visibleChange)="$event ? registerDialog.set(true) : registerDialog.set(false)"
+    [modal]="true"
+    [style]="{ width: '460px' }"
+    header="Create an account"
+    [dismissableMask]="true"
+>
+    <form [formGroup]="registerForm" (ngSubmit)="submitRegister()" class="dialog-form">
+        <div class="row">
+            <div class="field">
+                <label for="r-first">First name</label>
+                <input pInputText id="r-first" type="text" formControlName="firstName" />
+            </div>
+            <div class="field">
+                <label for="r-last">Last name</label>
+                <input pInputText id="r-last" type="text" formControlName="lastName" />
+            </div>
+        </div>
+        <div class="field">
+            <label for="r-email">Email</label>
+            <input pInputText id="r-email" type="email" formControlName="email" />
+        </div>
+        <div class="field">
+            <label for="r-user">Username</label>
+            <input pInputText id="r-user" type="text" formControlName="username" />
+        </div>
+        <div class="field">
+            <label for="r-pw">Password</label>
+            <p-password id="r-pw" formControlName="password" [feedback]="true" [toggleMask]="true" [fluid]="true" />
+        </div>
+        <div class="field">
+            <label for="r-cpw">Confirm password</label>
+            <p-password id="r-cpw" formControlName="confirmPassword" [feedback]="false" [toggleMask]="true" [fluid]="true" />
+            @if (registerForm.errors?.['passwordsMismatch']) {
+                <small class="error-message">Passwords do not match</small>
+            }
+        </div>
+        <label class="terms-row">
+            <input type="checkbox" formControlName="acceptTerms" />
+            <span>
+                I agree to the
+                <a routerLink="/terms" target="_blank" rel="noopener">Terms of Use</a>
+                and
+                <a routerLink="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.
+            </span>
+        </label>
+        <div class="actions-row">
+            <button type="button" class="btn ghost small" (click)="registerDialog.set(false)">Cancel</button>
+            <button
+                type="submit"
+                class="btn primary small"
+                [disabled]="registerForm.invalid || loadingService.isLoading(REGISTER_KEY)"
+            >
+                @if (loadingService.isLoading(REGISTER_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                } @else {
+                    Create account
+                }
+            </button>
+        </div>
+    </form>
+</p-dialog>

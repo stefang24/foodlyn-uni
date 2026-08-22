@@ -1,0 +1,135 @@
+@if (staffCart.context(); as ctx) {
+    <div class="staff-menu">
+        <header class="topbar">
+            <button type="button" class="icon-btn" (click)="back()">
+                <i class="pi pi-arrow-left"></i>
+            </button>
+            <div class="title">
+                <h1>Menu</h1>
+                <p>{{ ctx.restaurantName }} · Table #{{ ctx.tableNumber }}</p>
+            </div>
+            <button type="button" class="cart-btn" (click)="goToCart()" [disabled]="staffCart.isEmpty()">
+                <i class="pi pi-shopping-cart"></i>
+                @if (!staffCart.isEmpty()) {
+                    <span class="badge">{{ staffCart.itemCount() }}</span>
+                }
+            </button>
+        </header>
+
+        @if (menus().length > 0) {
+            <nav class="menu-tabs">
+                @for (m of menus(); track m.id) {
+                    <button
+                        type="button"
+                        class="tab"
+                        [class.active]="m.id === selectedMenuId()"
+                        (click)="selectMenu(m.id)"
+                    >
+                        {{ m.name }}
+                    </button>
+                }
+            </nav>
+        }
+
+        @if (selectedMenu(); as menu) {
+            @for (cat of menu.categories; track cat.id) {
+                <section class="category">
+                    <h2>{{ cat.name }}</h2>
+                    <div class="grid">
+                        @for (item of cat.items; track item.id) {
+                            <app-menu-item-card
+                                [item]="item"
+                                [orderable]="true"
+                                [currency]="restaurantCurrency()"
+                                (order)="openAddToCart($event)"
+                            />
+                        }
+                    </div>
+                </section>
+            }
+        }
+    </div>
+
+    <p-dialog
+        [visible]="dialogOpen()"
+        (visibleChange)="dialogOpen.set($event)"
+        [modal]="true"
+        [closable]="true"
+        [style]="{ width: '420px', maxWidth: '92vw' }"
+        header="Add to order"
+    >
+        @if (dialogItem(); as item) {
+            <div class="add-dialog">
+                <h3>{{ item.name }}</h3>
+
+                @for (group of item.modifierGroups; track group.id) {
+                    @if (group.isActive) {
+                        <div class="mod-group">
+                            <header>
+                                <h5>{{ group.name }}</h5>
+                                <span class="hint">
+                                    @if (group.minSelect === group.maxSelect) {
+                                        Pick {{ group.maxSelect }}
+                                    } @else if (group.maxSelect === 1) {
+                                        @if (group.minSelect === 0) { Optional · pick 1 } @else { Required }
+                                    } @else {
+                                        Pick {{ group.minSelect }}–{{ group.maxSelect }}
+                                    }
+                                </span>
+                            </header>
+                            <div class="mod-list">
+                                @for (mod of group.modifiers; track mod.id) {
+                                    @if (mod.isActive) {
+                                        <button
+                                            type="button"
+                                            class="mod-option"
+                                            [class.selected]="isModSelected(mod.id)"
+                                            (click)="toggleModifier(group.id, mod.id, group.maxSelect)"
+                                        >
+                                            <span class="mod-name">{{ mod.name }}</span>
+                                            @if (mod.priceDelta > 0) {
+                                                <span class="mod-price">
+                                                    +{{ mod.priceDelta | currency: (restaurantCurrency() ?? 'USD') }}
+                                                </span>
+                                            } @else {
+                                                <span class="mod-price free">Free</span>
+                                            }
+                                        </button>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                <div class="qty-row">
+                    <button type="button" (click)="dec()"><i class="pi pi-minus"></i></button>
+                    <span>{{ dialogQuantity() }}</span>
+                    <button type="button" (click)="inc()"><i class="pi pi-plus"></i></button>
+                </div>
+                <label>Notes (optional)</label>
+                <input
+                    type="text"
+                    pInputText
+                    [ngModel]="dialogNotes()"
+                    (ngModelChange)="dialogNotes.set($event)"
+                    placeholder="No onions, extra spicy..."
+                />
+                <div class="total">
+                    Total: <strong>{{ dialogTotal() | currency: (restaurantCurrency() ?? 'USD') }}</strong>
+                </div>
+                <div class="actions">
+                    <button type="button" class="btn ghost" (click)="dialogOpen.set(false)">Cancel</button>
+                    <button
+                        type="button"
+                        class="btn primary"
+                        (click)="confirmAdd()"
+                        [disabled]="!dialogCanConfirm()"
+                    >
+                        Add
+                    </button>
+                </div>
+            </div>
+        }
+    </p-dialog>
+}

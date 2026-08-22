@@ -1,0 +1,394 @@
+<div class="overview">
+    <section class="page-header">
+        <div>
+            <h1>Restaurants</h1>
+            <p>Manage every restaurant in the system.</p>
+        </div>
+        <button type="button" class="btn primary" (click)="openCreate()">
+            <i class="pi pi-plus"></i> New restaurant
+        </button>
+    </section>
+
+    <div class="filters">
+        <span class="search-box">
+            <i class="pi pi-search"></i>
+            <input
+                type="text"
+                pInputText
+                placeholder="Search by name, city, cuisine..."
+                [value]="searchText()"
+                (input)="onSearchChange($any($event.target).value)"
+            />
+        </span>
+        <p-select
+            placeholder="Status"
+            [options]="activeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            [ngModel]="activeFilter()"
+            (ngModelChange)="setActiveFilter($event)"
+            appendTo="body"
+        />
+    </div>
+
+    <p-table
+        [value]="restaurants()"
+        [lazy]="true"
+        [paginator]="true"
+        [rows]="10"
+        [totalRecords]="totalCount()"
+        [loading]="loading()"
+        (onLazyLoad)="onLazyLoad($event)"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        class="p-datatable-sm table-card"
+        dataKey="id"
+    >
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+                <th>Slug</th>
+                <th pSortableColumn="city">City <p-sortIcon field="city" /></th>
+                <th>Country</th>
+                <th pSortableColumn="cuisine">Cuisine <p-sortIcon field="cuisine" /></th>
+                <th pSortableColumn="isActive">Active <p-sortIcon field="isActive" /></th>
+                <th pSortableColumn="createdAt">Created <p-sortIcon field="createdAt" /></th>
+                <th></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+            <tr class="row-clickable" (click)="openPublicRestaurant(row)">
+                <td>{{ row.name }}</td>
+                <td>{{ row.slug }}</td>
+                <td>{{ row.city || '-' }}</td>
+                <td>{{ row.country || '-' }}</td>
+                <td>{{ row.cuisine || '-' }}</td>
+                <td>
+                    <span class="status-pill" [class.active]="row.isActive">
+                        {{ row.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                </td>
+                <td>{{ row.createdAt | date: 'mediumDate' }}</td>
+                <td class="actions">
+                    <button
+                        type="button"
+                        class="icon-btn"
+                        (click)="$event.stopPropagation(); openEdit(row)"
+                        aria-label="Edit"
+                    >
+                        <i class="pi pi-pencil"></i>
+                    </button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="8" class="empty">No restaurants match your filters.</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog
+    [visible]="dialogVisible()"
+    (visibleChange)="$event ? dialogVisible.set(true) : close()"
+    [modal]="true"
+    [style]="{ width: '720px' }"
+    header="Edit restaurant"
+    [dismissableMask]="true"
+>
+    @if (editing) {
+        <form [formGroup]="editForm" (ngSubmit)="save()" class="edit-form">
+            <div class="grid">
+                <div class="field span-2">
+                    <label for="e-name">Name</label>
+                    <input pInputText id="e-name" type="text" formControlName="name" />
+                </div>
+                <div class="field span-2">
+                    <label for="e-description">Description</label>
+                    <textarea pTextarea id="e-description" rows="3" formControlName="description"></textarea>
+                </div>
+
+                <div class="field">
+                    <label for="e-email">Email</label>
+                    <input pInputText id="e-email" type="email" formControlName="email" />
+                </div>
+                <div class="field">
+                    <label for="e-phone">Phone</label>
+                    <input pInputText id="e-phone" type="text" formControlName="phoneNumber" />
+                </div>
+                <div class="field span-2">
+                    <label for="e-website">Website</label>
+                    <input pInputText id="e-website" type="url" formControlName="website" />
+                </div>
+
+                <div class="field span-2">
+                    <label for="e-street">Street address</label>
+                    <input pInputText id="e-street" type="text" formControlName="streetAddress" />
+                </div>
+                <div class="field">
+                    <label for="e-city">City</label>
+                    <input pInputText id="e-city" type="text" formControlName="city" />
+                </div>
+                <div class="field">
+                    <label for="e-postal">Postal code</label>
+                    <input pInputText id="e-postal" type="text" formControlName="postalCode" />
+                </div>
+                <div class="field">
+                    <label for="e-country">Country</label>
+                    <input pInputText id="e-country" type="text" formControlName="country" />
+                </div>
+                <div class="field">
+                    <label for="e-tz">Time zone</label>
+                    <p-select
+                        id="e-tz"
+                        formControlName="timeZone"
+                        [options]="timezoneOptions()"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Select time zone"
+                        appendTo="body"
+                    />
+                </div>
+                <div class="field">
+                    <label for="e-lat">Latitude</label>
+                    <input pInputText id="e-lat" type="number" step="0.000001" formControlName="latitude" />
+                </div>
+                <div class="field">
+                    <label for="e-lng">Longitude</label>
+                    <input pInputText id="e-lng" type="number" step="0.000001" formControlName="longitude" />
+                </div>
+
+                <div class="field span-2">
+                    <label>Logo</label>
+                    <app-image-upload formControlName="logoUrl" folder="restaurants/logos" aspect="square" />
+                </div>
+                <div class="field span-2">
+                    <label>Cover image</label>
+                    <app-image-upload formControlName="coverImageUrl" folder="restaurants/covers" />
+                </div>
+                <div class="field">
+                    <label for="e-currency">Currency</label>
+                    <p-select
+                        id="e-currency"
+                        formControlName="currency"
+                        [options]="currencyOptions()"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Select currency"
+                        appendTo="body"
+                    />
+                </div>
+                <div class="field">
+                    <label for="e-tax">Tax ID</label>
+                    <input pInputText id="e-tax" type="text" formControlName="taxId" />
+                </div>
+                <div class="field">
+                    <label for="e-cuisine">Cuisine</label>
+                    <input pInputText id="e-cuisine" type="text" formControlName="cuisine" />
+                </div>
+                <div class="field toggle-field">
+                    <label for="e-active">Active</label>
+                    <p-toggleswitch id="e-active" formControlName="isActive" />
+                </div>
+            </div>
+
+            <section class="hours-section">
+                <header class="hours-head">
+                    <div>
+                        <h3>Opening hours</h3>
+                        <p>Toggle each day and set its open / close time.</p>
+                    </div>
+                    @if (hoursIncomplete()) {
+                        <span class="hours-tag warn"><i class="pi pi-info-circle"></i> Not configured</span>
+                    }
+                </header>
+
+                <div class="hours-list">
+                    @for (dow of DAY_INDICES; track dow) {
+                        @let day = hoursForDay(dow);
+                        <div class="hours-row" [class.off]="!day.isOpen">
+                            <div class="day-name">{{ DAY_NAMES[dow] }}</div>
+                            <label class="day-toggle">
+                                <input
+                                    type="checkbox"
+                                    [checked]="day.isOpen"
+                                    (change)="toggleDay(dow, $any($event.target).checked)"
+                                />
+                                <span>Working</span>
+                            </label>
+                            <input
+                                type="time"
+                                class="time-input"
+                                [value]="day.openTime"
+                                (change)="setDayTime(dow, 'openTime', $any($event.target).value)"
+                                [disabled]="!day.isOpen"
+                            />
+                            <span class="to">to</span>
+                            <input
+                                type="time"
+                                class="time-input"
+                                [value]="day.closeTime"
+                                (change)="setDayTime(dow, 'closeTime', $any($event.target).value)"
+                                [disabled]="!day.isOpen"
+                            />
+                        </div>
+                    }
+                </div>
+
+                <div class="hours-actions">
+                    <button
+                        type="button"
+                        class="btn ghost"
+                        (click)="saveOpeningHours()"
+                        [disabled]="loadingService.isLoading(SAVE_HOURS_KEY)"
+                    >
+                        @if (loadingService.isLoading(SAVE_HOURS_KEY)) {
+                            <i class="pi pi-spin pi-spinner"></i>
+                        } @else {
+                            <i class="pi pi-clock"></i>
+                        }
+                        Save opening hours
+                    </button>
+                </div>
+            </section>
+
+            <div class="actions-row">
+                <button type="button" class="btn ghost" (click)="close()">Cancel</button>
+                <button
+                    type="submit"
+                    class="btn primary"
+                    [disabled]="editForm.invalid || loadingService.isLoading(UPDATE_RESTAURANT_KEY)"
+                >
+                    @if (loadingService.isLoading(UPDATE_RESTAURANT_KEY)) {
+                        <i class="pi pi-spin pi-spinner"></i>
+                    } @else {
+                        Save
+                    }
+                </button>
+            </div>
+        </form>
+    }
+</p-dialog>
+
+<p-dialog
+    [visible]="createDialogVisible()"
+    (visibleChange)="$event ? createDialogVisible.set(true) : closeCreate()"
+    [modal]="true"
+    [style]="{ width: '720px' }"
+    header="New restaurant"
+    [dismissableMask]="true"
+>
+    <form [formGroup]="createForm" (ngSubmit)="createRestaurant()" class="edit-form">
+        <div class="grid">
+            <div class="field span-2">
+                <label for="c-name">Name *</label>
+                <input
+                    pInputText
+                    id="c-name"
+                    type="text"
+                    formControlName="name"
+                    [class.ng-invalid]="isInvalid(createForm, 'name')"
+                    [class.ng-dirty]="isInvalid(createForm, 'name')"
+                />
+                @if (isInvalid(createForm, 'name')) {
+                    <small class="error-message">{{ getErrorMessage(createForm, 'name') }}</small>
+                }
+            </div>
+            <div class="field">
+                <label for="c-slug">Slug</label>
+                <input
+                    pInputText
+                    id="c-slug"
+                    type="text"
+                    formControlName="slug"
+                    placeholder="auto from name"
+                />
+                @if (isInvalid(createForm, 'slug')) {
+                    <small class="error-message">{{ getErrorMessage(createForm, 'slug') }}</small>
+                }
+            </div>
+            <div class="field">
+                <label for="c-cuisine">Cuisine</label>
+                <input pInputText id="c-cuisine" type="text" formControlName="cuisine" />
+            </div>
+            <div class="field span-2">
+                <label for="c-description">Description</label>
+                <textarea pTextarea id="c-description" rows="3" formControlName="description"></textarea>
+            </div>
+
+            <div class="field">
+                <label for="c-email">Email</label>
+                <input pInputText id="c-email" type="email" formControlName="email" />
+            </div>
+            <div class="field">
+                <label for="c-phone">Phone</label>
+                <input pInputText id="c-phone" type="text" formControlName="phoneNumber" />
+            </div>
+            <div class="field span-2">
+                <label for="c-website">Website</label>
+                <input pInputText id="c-website" type="url" formControlName="website" />
+            </div>
+
+            <div class="field span-2">
+                <label for="c-street">Street address</label>
+                <input pInputText id="c-street" type="text" formControlName="streetAddress" />
+            </div>
+            <div class="field">
+                <label for="c-city">City</label>
+                <input pInputText id="c-city" type="text" formControlName="city" />
+            </div>
+            <div class="field">
+                <label for="c-postal">Postal code</label>
+                <input pInputText id="c-postal" type="text" formControlName="postalCode" />
+            </div>
+            <div class="field">
+                <label for="c-country">Country</label>
+                <input pInputText id="c-country" type="text" formControlName="country" />
+            </div>
+            <div class="field">
+                <label for="c-tz">Time zone</label>
+                <p-select
+                    id="c-tz"
+                    formControlName="timeZone"
+                    [options]="timezoneOptions()"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select time zone"
+                    appendTo="body"
+                />
+            </div>
+            <div class="field">
+                <label for="c-currency">Currency</label>
+                <p-select
+                    id="c-currency"
+                    formControlName="currency"
+                    [options]="currencyOptions()"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select currency"
+                    appendTo="body"
+                />
+            </div>
+            <div class="field">
+                <label for="c-tax">Tax ID</label>
+                <input pInputText id="c-tax" type="text" formControlName="taxId" />
+            </div>
+        </div>
+
+        <div class="actions-row">
+            <button type="button" class="btn ghost" (click)="closeCreate()">Cancel</button>
+            <button
+                type="submit"
+                class="btn primary"
+                [disabled]="createForm.invalid || loadingService.isLoading(CREATE_RESTAURANT_KEY)"
+            >
+                @if (loadingService.isLoading(CREATE_RESTAURANT_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                } @else {
+                    Create
+                }
+            </button>
+        </div>
+    </form>
+</p-dialog>

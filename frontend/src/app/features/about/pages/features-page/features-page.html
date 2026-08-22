@@ -1,0 +1,46 @@
+<div class="features-page">
+    @if (!isLoggedIn()) {
+        <header class="top">
+            <button type="button" class="back" (click)="back()">
+                <i class="pi pi-arrow-left"></i> Home
+            </button>
+        </header>
+    }
+
+    <section class="hero">
+        <span class="eyebrow">FEATURES</span>
+        <h1>Everything Foodlyn does</h1>
+        <p class="lead">
+            A complete operating system for modern restaurants - from the guest scanning a QR code
+            to the cashier closing the bill.
+        </p>
+    </section>
+
+    @for (g of groups; track g.title) {
+        <section class="group">
+            <header class="g-head">
+                <div class="g-ico"><i [class]="'pi ' + g.icon"></i></div>
+                <h2>{{ g.title }}</h2>
+            </header>
+            <div class="items">
+                @for (it of g.items; track it.name) {
+                    <article class="item">
+                        <div class="item-ico"><i [class]="'pi ' + it.icon"></i></div>
+                        <div>
+                            <h3>{{ it.name }}</h3>
+                            <p>{{ it.desc }}</p>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    }
+
+    <section class="cta">
+        <h2>Ready to try it?</h2>
+        <p>Sign up as a customer to explore restaurants on Foodlyn.</p>
+        <button type="button" class="btn primary" (click)="register()">
+            <i class="pi pi-user-plus"></i> Create account
+        </button>
+    </section>
+</div>

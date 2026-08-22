@@ -1,0 +1,136 @@
+<div class="app-shell">
+    <header class="app-header">
+        <div class="brand">
+            <img src="assets/images/foodlyn.png" alt="Foodlyn" class="brand-logo" />
+            <span class="brand-sep">|</span>
+            <span class="section-name">{{ sectionLabel() }}</span>
+        </div>
+
+        <div class="header-actions">
+            <span class="clock">{{ timeLabel() }}</span>
+
+            @if (showsBell()) {
+                <app-notification-bell />
+            }
+
+            <button
+                type="button"
+                class="avatar-btn"
+                (click)="toggleProfile()"
+                [class.active]="profileOpen()"
+                [class.has-image]="avatarUrl()"
+                title="Profile"
+            >
+                @if (avatarUrl(); as a) {
+                    <img [src]="a" alt="" class="avatar-img" />
+                } @else {
+                    {{ initials() }}
+                }
+            </button>
+        </div>
+    </header>
+
+    <aside class="app-sidebar">
+        <div class="role-card">
+            <div class="role-tile">
+                <i [class]="'pi ' + profile().icon"></i>
+            </div>
+            <div class="role-meta">
+                <div class="role-title">{{ profile().label }}</div>
+                <div class="role-sub">{{ profile().subtitle }}</div>
+            </div>
+        </div>
+
+        <div class="section-label">NAVIGATION</div>
+
+        <nav class="nav">
+            @for (item of profile().items; track item.path) {
+                <a
+                    class="nav-item"
+                    [routerLink]="item.path"
+                    routerLinkActive="active"
+                    [routerLinkActiveOptions]="{ exact: true }"
+                >
+                    <i [class]="'pi ' + item.icon"></i>
+                    <span>{{ item.label }}</span>
+                </a>
+            }
+        </nav>
+
+        <div class="os-stamp">
+            <div class="os-name">Foodlyn System</div>
+            <div class="os-meta">v0.4.2 · Dev</div>
+        </div>
+    </aside>
+
+    <main class="app-main">
+        <div class="main-content">
+            <router-outlet />
+        </div>
+    </main>
+
+    @if (profileOpen()) {
+        <div class="profile-backdrop" (click)="closeProfile()"></div>
+        <aside class="profile-drawer">
+            <header class="pd-header">
+                <span class="pd-eyebrow">PROFILE</span>
+                <button class="pd-close" (click)="closeProfile()" aria-label="Close">
+                    <i class="pi pi-times"></i>
+                </button>
+            </header>
+
+            <section class="pd-identity">
+                <div class="pd-avatar" [class.has-image]="avatarUrl()">
+                    @if (avatarUrl(); as a) {
+                        <img [src]="a" alt="" class="avatar-img" />
+                    } @else {
+                        {{ initials() }}
+                    }
+                </div>
+                <div class="pd-identity-text">
+                    <div class="pd-name">{{ fullName() }}</div>
+                    <div class="pd-tags">
+                        <span class="pd-role-chip">{{ profile().label }}</span>
+                        <span class="pd-online">Online</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="pd-section">
+                <div class="pd-section-title">ACCOUNT</div>
+                <div class="pd-row">
+                    <i class="pi pi-envelope"></i>
+                    <div class="pd-row-text">
+                        <span class="pd-row-label">Email</span>
+                        <span class="pd-row-value">{{ userEmail() }}</span>
+                    </div>
+                </div>
+                <div class="pd-row">
+                    <i class="pi pi-id-card"></i>
+                    <div class="pd-row-text">
+                        <span class="pd-row-label">Employee ID</span>
+                        <span class="pd-row-value">#EMP-{{ employeeCode() }}</span>
+                    </div>
+                </div>
+                <div class="pd-row">
+                    <i class="pi pi-calendar"></i>
+                    <div class="pd-row-text">
+                        <span class="pd-row-label">Joined</span>
+                        <span class="pd-row-value">{{ joinedDate() }}</span>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="pd-footer">
+                <button type="button" class="pd-profile-link" (click)="goToProfile()">
+                    <i class="pi pi-id-card"></i>
+                    My profile
+                </button>
+                <button type="button" class="pd-signout" (click)="logout()">
+                    <i class="pi pi-sign-out"></i>
+                    Sign Out
+                </button>
+            </footer>
+        </aside>
+    }
+</div>

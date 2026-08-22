@@ -1,0 +1,61 @@
+<div class="sd-page">
+    <header class="sd-header">
+        <div class="brand">
+            <img src="assets/images/foodlyn_logo.png" alt="Foodlyn" class="logo-img" />
+            <span class="brand-name">Foodlyn</span>
+        </div>
+        @if (restaurant(); as r) {
+            <button
+                type="button"
+                class="restaurant-chip"
+                (click)="goToProfile()"
+                title="Open profile"
+            >
+                @if (r.logoUrl) {
+                    <img [src]="r.logoUrl | imageUrl" alt="" class="rc-logo" />
+                } @else {
+                    <span class="rc-initial">{{ r.name.charAt(0).toUpperCase() }}</span>
+                }
+                <span class="rc-name">{{ r.name }}</span>
+            </button>
+        }
+        <div class="clock">
+            <div class="time">{{ clockLabel() }}</div>
+            <div class="date">{{ dateLabel() }}</div>
+        </div>
+    </header>
+
+    <div class="sd-grid">
+        <section class="sd-col preparing">
+            <div class="col-head">
+                <i class="pi pi-clock"></i>
+                <h2>Preparing</h2>
+                <span class="count">{{ preparing().length }}</span>
+            </div>
+            <div class="numbers">
+                @for (o of preparing(); track o.id) {
+                    <div class="num">#{{ o.id }}</div>
+                }
+                @if (preparing().length === 0) {
+                    <p class="empty">No orders in preparation</p>
+                }
+            </div>
+        </section>
+
+        <section class="sd-col ready">
+            <div class="col-head">
+                <i class="pi pi-bell"></i>
+                <h2>Ready</h2>
+                <span class="count">{{ ready().length }}</span>
+            </div>
+            <div class="numbers">
+                @for (o of ready(); track o.id) {
+                    <div class="num pulse">#{{ o.id }}</div>
+                }
+                @if (ready().length === 0) {
+                    <p class="empty">No orders ready</p>
+                }
+            </div>
+        </section>
+    </div>
+</div>

@@ -1,0 +1,280 @@
+$primary: rgb(125, 7, 7);
+$primary-dark: rgb(70, 4, 4);
+$text-dark: #1a1a1a;
+$text-muted: #6b6b6b;
+$bg-soft: #f7f5f3;
+$border: #e5e5e5;
+$danger: #c0392b;
+
+.landing-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    background: linear-gradient(160deg, #fff 0%, $bg-soft 100%);
+    box-sizing: border-box;
+}
+
+.panel {
+    width: 100%;
+    max-width: 420px;
+    background: white;
+    border-radius: 24px;
+    padding: 32px 28px 28px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    border: 1px solid $border;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.logo {
+    height: 56px;
+    align-self: center;
+    object-fit: contain;
+    cursor: pointer;
+}
+
+.status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 24px 0;
+    color: $text-muted;
+
+    i {
+        font-size: 30px;
+        color: $primary;
+    }
+
+    h2 {
+        margin: 8px 0 0;
+        color: $text-dark;
+        font-size: 18px;
+    }
+
+    &.error {
+        i {
+            color: $danger;
+        }
+    }
+}
+
+.welcome {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+
+    .resto-logo {
+        max-width: 80px;
+        max-height: 80px;
+        object-fit: contain;
+        border-radius: 16px;
+        border: 1px solid $border;
+        padding: 4px;
+        background: white;
+    }
+
+    h1 {
+        margin: 6px 0 2px;
+        font-size: 24px;
+        font-weight: 700;
+        color: $text-dark;
+        letter-spacing: -0.4px;
+    }
+
+    .table-label {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: $primary;
+    }
+
+    .muted {
+        margin: 8px 0 0;
+        color: $text-muted;
+        font-size: 13px;
+    }
+}
+
+.choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn {
+    padding: 16px 18px;
+    border-radius: 14px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+    font-weight: 600;
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        border-color 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
+
+    i {
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    span {
+        font-size: 15px;
+        flex: 1;
+    }
+
+    small {
+        font-size: 11px;
+        opacity: 0.8;
+        font-weight: 500;
+        display: block;
+    }
+
+    &.primary {
+        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+        color: white;
+        box-shadow: 0 6px 18px rgba(125, 7, 7, 0.28);
+
+        small {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        &:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(125, 7, 7, 0.36);
+        }
+    }
+
+    &.outline {
+        background: white;
+        border-color: $primary;
+        color: $primary;
+
+        &:hover:not(:disabled) {
+            background: rgba(125, 7, 7, 0.06);
+        }
+    }
+
+    &.ghost {
+        background: white;
+        border-color: $border;
+        color: $text-dark;
+
+        small {
+            color: $text-muted;
+        }
+
+        &:hover:not(:disabled) {
+            border-color: $primary;
+            color: $primary;
+        }
+    }
+
+    &.small {
+        flex: unset;
+        padding: 9px 16px;
+        border-radius: 10px;
+        display: inline-flex;
+        justify-content: center;
+        min-width: 100px;
+
+        span {
+            flex: unset;
+        }
+
+        i {
+            font-size: 12px;
+        }
+    }
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+}
+
+.dialog-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 4px;
+
+    .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+
+        @media (max-width: 480px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: $text-dark;
+        }
+
+        input,
+        ::ng-deep .p-password {
+            width: 100%;
+        }
+    }
+
+    .error-message {
+        color: $danger;
+        font-size: 12px;
+    }
+
+    .terms-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 13px;
+        color: $text-dark;
+        line-height: 1.45;
+        cursor: pointer;
+
+        input[type='checkbox'] {
+            width: 16px;
+            height: 16px;
+            margin-top: 2px;
+            accent-color: $primary;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        a {
+            color: $primary;
+            font-weight: 700;
+            text-decoration: none;
+
+            &:hover { text-decoration: underline; }
+        }
+    }
+
+    .actions-row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 8px;
+        border-top: 1px solid $border;
+        margin-top: 4px;
+    }
+}

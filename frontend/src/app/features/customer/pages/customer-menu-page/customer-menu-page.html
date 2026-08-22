@@ -1,0 +1,273 @@
+@if (session(); as s) {
+    <div class="customer-menu">
+        <header class="topbar">
+            <div class="left">
+                @if (s.restaurantLogoUrl) {
+                    <img [src]="s.restaurantLogoUrl | imageUrl" [alt]="s.restaurantName" class="resto-logo" />
+                }
+                <div class="text">
+                    <h1>{{ s.restaurantName }}</h1>
+                    <p class="table">
+                        Table #{{ s.tableNumber }}
+                        @if (s.tableLabel) {
+                            <span> · {{ s.tableLabel }}</span>
+                        }
+                    </p>
+                </div>
+            </div>
+            <div class="actions">
+                <button
+                    type="button"
+                    class="btn accent small"
+                    (click)="openCallWaiter()"
+                    title="Call waiter"
+                >
+                    <i class="pi pi-bell"></i> Call waiter
+                </button>
+                <button
+                    type="button"
+                    class="btn ghost small"
+                    (click)="endSession()"
+                    title="Stop ordering - closes the session for everyone"
+                >
+                    <i class="pi pi-sign-out"></i> Stop ordering
+                </button>
+            </div>
+        </header>
+
+        @if (loadingService.isLoading(LOAD_KEY)) {
+            <div class="status">
+                <i class="pi pi-spin pi-spinner"></i>
+                <p>Loading menu...</p>
+            </div>
+        } @else if (menus().length === 0) {
+            <div class="status">
+                <i class="pi pi-inbox"></i>
+                <p>No published menus yet.</p>
+            </div>
+        } @else {
+            @if (menus().length > 1) {
+                <nav class="menu-chips">
+                    @for (m of menus(); track m.id) {
+                        <button
+                            type="button"
+                            class="chip"
+                            [class.active]="m.id === selectedMenuId()"
+                            (click)="selectMenu(m.id)"
+                        >
+                            {{ m.name }}
+                        </button>
+                    }
+                </nav>
+            }
+
+            @if (selectedMenu(); as menu) {
+                <section class="menu-head">
+                    <h2>{{ menu.name }}</h2>
+                    @if (menu.description) {
+                        <p>{{ menu.description }}</p>
+                    }
+                </section>
+
+                @for (category of menu.categories; track category.id) {
+                    <section class="category">
+                        <header class="cat-head">
+                            <h3>{{ category.name }}</h3>
+                            @if (category.description) {
+                                <p>{{ category.description }}</p>
+                            }
+                        </header>
+                        <div class="items-grid">
+                            @for (item of category.items; track item.id) {
+                                <app-menu-item-card
+                                    [item]="item"
+                                    [orderable]="true"
+                                    [currency]="restaurantCurrency()"
+                                    (order)="openAddToCart($event)"
+                                />
+                            }
+                        </div>
+                    </section>
+                }
+            }
+        }
+    </div>
+
+    @if (tableSession.cartCount() > 0) {
+        <button type="button" class="cart-bar" (click)="goToCart()">
+            <span class="left">
+                <i class="pi pi-shopping-cart"></i>
+                <span class="count">{{ tableSession.cartCount() }}</span>
+                View cart
+            </span>
+            <span class="right">
+                {{ tableSession.cartTotal() | currency: (restaurantCurrency() ?? 'USD') : 'symbol' : '1.2-2' }}
+                <i class="pi pi-arrow-right"></i>
+            </span>
+        </button>
+    }
+
+    <p-dialog
+        [visible]="dialogOpen()"
+        (visibleChange)="dialogOpen.set($event)"
+        [modal]="true"
+        [closable]="true"
+        [dismissableMask]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [style]="{ width: '420px' }"
+        header="Add to cart"
+    >
+        @if (dialogItem(); as item) {
+            <div class="qty-dialog">
+                <div class="item-preview">
+                    @if (item.imageUrl) {
+                        <img [src]="item.imageUrl | imageUrl" [alt]="item.name" />
+                    }
+                    <div class="info">
+                        <h4>{{ item.name }}</h4>
+                        <p class="price">
+                            {{ dialogUnitPrice() | currency: (restaurantCurrency() ?? 'USD') : 'symbol' : '1.2-2' }}
+                        </p>
+                        @if (item.shortDescription) {
+                            <p class="desc">{{ item.shortDescription }}</p>
+                        }
+                    </div>
+                </div>
+
+                @for (group of item.modifierGroups; track group.id) {
+                    @if (group.isActive) {
+                        <div class="mod-group">
+                            <header>
+                                <h5>{{ group.name }}</h5>
+                                <span class="hint">
+                                    @if (group.minSelect === group.maxSelect) {
+                                        Pick {{ group.maxSelect }}
+                                    } @else if (group.maxSelect === 1) {
+                                        @if (group.minSelect === 0) { Optional · pick 1 } @else { Required }
+                                    } @else {
+                                        Pick {{ group.minSelect }}–{{ group.maxSelect }}
+                                    }
+                                </span>
+                            </header>
+                            <div class="mod-list">
+                                @for (mod of group.modifiers; track mod.id) {
+                                    @if (mod.isActive) {
+                                        <button
+                                            type="button"
+                                            class="mod-option"
+                                            [class.selected]="isModSelected(mod.id)"
+                                            (click)="toggleModifier(group.id, mod.id, group.maxSelect)"
+                                        >
+                                            <span class="mod-name">{{ mod.name }}</span>
+                                            @if (mod.priceDelta > 0) {
+                                                <span class="mod-price">
+                                                    +{{ mod.priceDelta | currency: (restaurantCurrency() ?? 'USD') : 'symbol' : '1.2-2' }}
+                                                </span>
+                                            } @else {
+                                                <span class="mod-price free">Free</span>
+                                            }
+                                        </button>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                <div class="qty-row">
+                    <label>Quantity</label>
+                    <div class="qty-ctrl">
+                        <button type="button" (click)="dec()" [disabled]="dialogQuantity() <= 1">
+                            <i class="pi pi-minus"></i>
+                        </button>
+                        <span class="qty">{{ dialogQuantity() }}</span>
+                        <button type="button" (click)="inc()">
+                            <i class="pi pi-plus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="notes-row">
+                    <label for="notes">Notes (optional)</label>
+                    <input
+                        id="notes"
+                        pInputText
+                        type="text"
+                        [ngModel]="dialogNotes()"
+                        (ngModelChange)="dialogNotes.set($event)"
+                        placeholder="e.g. no onions"
+                    />
+                </div>
+
+                <div class="total-row">
+                    <span>Total</span>
+                    <strong>{{
+                        dialogTotal() | currency: (restaurantCurrency() ?? 'USD') : 'symbol' : '1.2-2'
+                    }}</strong>
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="btn ghost" (click)="closeDialog()">Cancel</button>
+                    <button
+                        type="button"
+                        class="btn primary"
+                        (click)="confirmAdd()"
+                        [disabled]="!dialogCanConfirm()"
+                    >
+                        <i class="pi pi-shopping-cart"></i> Add to cart
+                    </button>
+                </div>
+            </div>
+        }
+    </p-dialog>
+
+    <p-dialog
+        [visible]="callWaiterDialog()"
+        (visibleChange)="callWaiterDialog.set($event)"
+        [modal]="true"
+        [dismissableMask]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [style]="{ width: '420px' }"
+        header="Call the waiter"
+    >
+        <div class="call-dialog">
+            <p class="muted">
+                Send an optional note. The waiter will see your table number and come to you.
+            </p>
+            <input
+                pInputText
+                type="text"
+                placeholder="Optional note (e.g. need water)"
+                [ngModel]="callMessage()"
+                (ngModelChange)="callMessage.set($event)"
+                maxlength="200"
+            />
+            <div class="actions">
+                <button
+                    type="button"
+                    class="btn ghost small"
+                    (click)="callWaiterDialog.set(false)"
+                    [disabled]="callSending()"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    class="btn primary small"
+                    (click)="submitCallWaiter()"
+                    [disabled]="callSending()"
+                >
+                    @if (callSending()) {
+                        <i class="pi pi-spin pi-spinner"></i> Sending...
+                    } @else {
+                        <i class="pi pi-bell"></i> Call waiter
+                    }
+                </button>
+            </div>
+        </div>
+    </p-dialog>
+
+    <p-confirmdialog />
+}

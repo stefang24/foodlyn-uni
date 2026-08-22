@@ -1,0 +1,188 @@
+<div class="logs">
+    <section class="page-header">
+        <div>
+            <h1>System logs</h1>
+            <p>All server-side errors and warnings, sorted by newest.</p>
+        </div>
+    </section>
+
+    <div class="filters">
+        <span class="search-box">
+            <i class="pi pi-search"></i>
+            <input
+                type="text"
+                pInputText
+                placeholder="Search by message, exception, path, user..."
+                [value]="searchText()"
+                (input)="onSearchChange($any($event.target).value)"
+            />
+        </span>
+        <p-select
+            placeholder="Level"
+            [options]="levelOptions"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            [ngModel]="levelFilter()"
+            (ngModelChange)="setLevelFilter($event)"
+            appendTo="body"
+        />
+    </div>
+
+    <p-table
+        [value]="logs()"
+        [lazy]="true"
+        [paginator]="true"
+        [rows]="10"
+        [totalRecords]="totalCount()"
+        [loading]="loading()"
+        (onLazyLoad)="onLazyLoad($event)"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        class="p-datatable-sm table-card"
+        dataKey="id"
+    >
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="createdAt" style="width: 170px">When <p-sortIcon field="createdAt" /></th>
+                <th pSortableColumn="level" style="width: 100px">Level <p-sortIcon field="level" /></th>
+                <th pSortableColumn="statusCode" style="width: 90px">Status <p-sortIcon field="statusCode" /></th>
+                <th pSortableColumn="path">Path <p-sortIcon field="path" /></th>
+                <th>Message</th>
+                <th pSortableColumn="username" style="width: 160px">User <p-sortIcon field="username" /></th>
+                <th style="width: 60px"></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+            <tr (click)="openDetail(row)" class="row-clickable">
+                <td><span class="when">{{ row.createdAt | date: 'short' }}</span></td>
+                <td>
+                    <span class="level-pill" [class]="levelClass(row.level)">{{ row.level }}</span>
+                </td>
+                <td>
+                    @if (row.statusCode != null) {
+                        <span class="status-pill" [class]="statusClass(row.statusCode)">{{ row.statusCode }}</span>
+                    } @else {
+                        <span class="muted">-</span>
+                    }
+                </td>
+                <td>
+                    @if (row.method) {
+                        <span class="method">{{ row.method }}</span>
+                    }
+                    <span class="path">{{ row.path || '-' }}</span>
+                </td>
+                <td class="msg" [title]="row.message">{{ row.message }}</td>
+                <td>
+                    @if (row.username) {
+                        <strong>{{ row.username }}</strong>
+                        @if (row.userRole) { <span class="muted"> · {{ row.userRole }}</span> }
+                    } @else {
+                        <span class="muted">anonymous</span>
+                    }
+                </td>
+                <td class="actions">
+                    <i class="pi pi-chevron-right"></i>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="7" class="empty">No log entries match your filters.</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog
+    [visible]="detailOpen()"
+    (visibleChange)="$event ? detailOpen.set(true) : closeDetail()"
+    [modal]="true"
+    [dismissableMask]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '780px', maxWidth: '95vw' }"
+    header="Log details"
+>
+    @if (detailLog(); as log) {
+        <div class="log-detail">
+            <div class="meta-grid">
+                <div class="meta">
+                    <div class="meta-label">When</div>
+                    <div class="meta-value">{{ log.createdAt | date: 'medium' }}</div>
+                </div>
+                <div class="meta">
+                    <div class="meta-label">Level</div>
+                    <div class="meta-value">
+                        <span class="level-pill" [class]="levelClass(log.level)">{{ log.level }}</span>
+                    </div>
+                </div>
+                <div class="meta">
+                    <div class="meta-label">Status</div>
+                    <div class="meta-value">
+                        @if (log.statusCode != null) {
+                            <span class="status-pill" [class]="statusClass(log.statusCode)">{{ log.statusCode }}</span>
+                        } @else { - }
+                    </div>
+                </div>
+                <div class="meta">
+                    <div class="meta-label">Source</div>
+                    <div class="meta-value">{{ log.source || '-' }}</div>
+                </div>
+                <div class="meta span-2">
+                    <div class="meta-label">Endpoint</div>
+                    <div class="meta-value mono">
+                        @if (log.method) { <span class="method">{{ log.method }}</span> }
+                        {{ log.path || '-' }}{{ log.queryString || '' }}
+                    </div>
+                </div>
+                <div class="meta">
+                    <div class="meta-label">User</div>
+                    <div class="meta-value">
+                        @if (log.username) {
+                            <strong>{{ log.username }}</strong>
+                            <span class="muted"> · ID {{ log.userId }}</span>
+                        } @else {
+                            <span class="muted">anonymous</span>
+                        }
+                    </div>
+                </div>
+                <div class="meta">
+                    <div class="meta-label">Role</div>
+                    <div class="meta-value">{{ log.userRole || '-' }}</div>
+                </div>
+                <div class="meta">
+                    <div class="meta-label">Restaurant</div>
+                    <div class="meta-value">{{ log.restaurantId ?? '-' }}</div>
+                </div>
+                <div class="meta">
+                    <div class="meta-label">IP</div>
+                    <div class="meta-value mono">{{ log.ipAddress || '-' }}</div>
+                </div>
+                <div class="meta span-2">
+                    <div class="meta-label">User agent</div>
+                    <div class="meta-value mono small">{{ log.userAgent || '-' }}</div>
+                </div>
+            </div>
+
+            <section class="block">
+                <h4>Message</h4>
+                <p class="msg-text">{{ log.message }}</p>
+                @if (log.exceptionType) {
+                    <p class="exc-type">{{ log.exceptionType }}</p>
+                }
+            </section>
+
+            @if (log.stackTrace) {
+                <section class="block">
+                    <div class="block-head">
+                        <h4>Stack trace</h4>
+                        <button type="button" class="copy-btn" (click)="copyStack()">
+                            <i class="pi pi-copy"></i> Copy
+                        </button>
+                    </div>
+                    <pre class="stack">{{ log.stackTrace }}</pre>
+                </section>
+            }
+        </div>
+    }
+</p-dialog>

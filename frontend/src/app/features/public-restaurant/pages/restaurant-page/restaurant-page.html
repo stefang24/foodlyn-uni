@@ -1,0 +1,234 @@
+<div class="rpage">
+    <header class="top">
+        <button type="button" class="back" (click)="back()">
+            <i class="pi pi-arrow-left"></i> Restaurants
+        </button>
+    </header>
+
+    @if (loading()) {
+        <div class="state">
+            <i class="pi pi-spin pi-spinner"></i>
+            <p>Loading...</p>
+        </div>
+    } @else if (error()) {
+        <div class="state">
+            <i class="pi pi-exclamation-triangle"></i>
+            <p>{{ error() }}</p>
+        </div>
+    } @else if (restaurant(); as r) {
+        <section
+            class="hero"
+            [style.background-image]="(r.coverImageUrl | imageUrl) ? 'linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.72)), url(' + (r.coverImageUrl | imageUrl) + ')' : null"
+        >
+            <div class="hero-inner">
+                @if (r.logoUrl) {
+                    <img [src]="r.logoUrl | imageUrl" alt="" class="logo" />
+                } @else {
+                    <div class="logo placeholder">
+                        <i class="pi pi-shop"></i>
+                    </div>
+                }
+
+                <div class="hero-text">
+                    <h1>{{ r.name }}</h1>
+                    @if (r.description) {
+                        <p class="tagline">{{ r.description }}</p>
+                    }
+
+                    <div class="hero-pills">
+                        @if (r.cuisine) {
+                            <span class="pill"><i class="pi pi-tag"></i> {{ r.cuisine }}</span>
+                        }
+                        <span class="pill"><i class="pi pi-clock"></i> {{ todayHours() }}</span>
+                        @if (r.city) {
+                            <span class="pill"><i class="pi pi-map-marker"></i> {{ r.city }}@if (r.country) { , {{ r.country }} }</span>
+                        }
+                        @if (r.phoneNumber) {
+                            <span class="pill"><i class="pi pi-phone"></i> {{ r.phoneNumber }}</span>
+                        }
+                    </div>
+
+                    <button type="button" class="more-btn" (click)="openDetails()">
+                        <i class="pi pi-info-circle"></i> View more details
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="info-row">
+            <div class="info-card">
+                <div class="ic-label">Delivery</div>
+                <div class="ic-value"><i class="pi pi-motorcycle"></i> 30-40 min</div>
+            </div>
+            <div class="info-card">
+                <div class="ic-label">Min. order</div>
+                <div class="ic-value">-</div>
+            </div>
+            <div class="info-card">
+                <div class="ic-label">Rating</div>
+                <div class="ic-value"><i class="pi pi-star-fill"></i> 9.4</div>
+            </div>
+            @if (r.website) {
+                <a class="info-card link" [href]="r.website" target="_blank" rel="noopener">
+                    <div class="ic-label">Website</div>
+                    <div class="ic-value"><i class="pi pi-external-link"></i> Visit</div>
+                </a>
+            }
+        </section>
+
+        @if (categories().length === 0) {
+            <section class="no-menu">
+                <i class="pi pi-book"></i>
+                <h2>Menu coming soon</h2>
+                <p>This restaurant hasn't published a menu yet.</p>
+            </section>
+        } @else {
+            <nav class="cat-nav">
+                <div class="cat-nav-inner">
+                    @for (cv of categories(); track cv.anchorId) {
+                        <button
+                            type="button"
+                            class="cat-chip"
+                            [class.active]="activeAnchor() === cv.anchorId"
+                            (click)="scrollTo(cv.anchorId)"
+                        >
+                            {{ cv.category.name }}
+                        </button>
+                    }
+                </div>
+                <div class="cat-search">
+                    <i class="pi pi-search"></i>
+                    <input
+                        type="text"
+                        [placeholder]="'Search in ' + r.name"
+                        [ngModel]="query()"
+                        (ngModelChange)="query.set($event)"
+                    />
+                </div>
+            </nav>
+
+            <div class="menu-wrap">
+                @for (cv of filteredCategories(); track cv.anchorId) {
+                    <section class="cat-block" [id]="cv.anchorId" #catBlock>
+                        <h2>{{ cv.category.name }}</h2>
+                        @if (cv.category.description) {
+                            <p class="cat-desc">{{ cv.category.description }}</p>
+                        }
+
+                        <div class="items">
+                            @for (item of cv.category.items; track item.id) {
+                                <article class="item" [class.unavailable]="!item.isAvailable">
+                                    <div class="item-text">
+                                        <h3>{{ item.name }}</h3>
+                                        @if (item.description) {
+                                            <p>{{ item.description }}</p>
+                                        }
+
+                                        <div class="item-foot">
+                                            <div class="price">
+                                                @if (hasDiscount(item)) {
+                                                    <span class="old">{{ item.price | currency: currency() : 'symbol' : '1.2-2' }}</span>
+                                                    <span class="new">{{ priceFor(item) | currency: currency() : 'symbol' : '1.2-2' }}</span>
+                                                } @else {
+                                                    <span class="new">{{ item.price | currency: currency() : 'symbol' : '1.2-2' }}</span>
+                                                }
+                                            </div>
+
+                                            <div class="badges">
+                                                @if (item.isVegetarian) { <span class="badge veg">Veg</span> }
+                                                @if (item.isVegan) { <span class="badge vegan">Vegan</span> }
+                                                @if (item.isGlutenFree) { <span class="badge gf">GF</span> }
+                                                @if (item.isNew) { <span class="badge new">New</span> }
+                                                @if (item.isFeatured) { <span class="badge feat">★</span> }
+                                                @if (!item.isAvailable) { <span class="badge off">Unavailable</span> }
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="item-thumb"
+                                        [style.background-image]="((item.imageUrl || item.thumbnailUrl) | imageUrl) ? 'url(' + ((item.imageUrl || item.thumbnailUrl) | imageUrl) + ')' : null"
+                                    >
+                                        @if (!item.imageUrl && !item.thumbnailUrl) {
+                                            <i class="pi pi-image"></i>
+                                        }
+
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    </section>
+                }
+
+                @if (filteredCategories().length === 0) {
+                    <div class="state">
+                        <i class="pi pi-search"></i>
+                        <p>No items match your search.</p>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+<p-dialog
+    [visible]="detailsOpen()"
+    (visibleChange)="$event ? detailsOpen.set(true) : closeDetails()"
+    [modal]="true"
+    [dismissableMask]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '520px' }"
+    header="Restaurant details"
+>
+    @if (restaurant(); as r) {
+        <div class="details-body">
+            <section class="details-section">
+                <h4><i class="pi pi-clock"></i> Opening hours</h4>
+                <div class="hours-list">
+                    @for (dow of DAY_INDICES; track dow) {
+                        @let day = hoursForDay(dow);
+                        <div class="hours-row" [class.today]="isToday(dow)" [class.off]="!day.isOpen">
+                            <span class="day">{{ DAY_NAMES[dow] }}@if (isToday(dow)) { <span class="today-tag">Today</span> }</span>
+                            <span class="time">
+                                @if (day.isOpen) {
+                                    {{ day.openTime }} – {{ day.closeTime }}
+                                } @else {
+                                    Closed
+                                }
+                            </span>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            @if (r.streetAddress || r.city || r.country) {
+                <section class="details-section">
+                    <h4><i class="pi pi-map-marker"></i> Location</h4>
+                    <p class="address">
+                        @if (r.streetAddress) { {{ r.streetAddress }}<br /> }
+                        @if (r.city) { {{ r.city }} }@if (r.postalCode) { , {{ r.postalCode }} }<br />
+                        @if (r.country) { {{ r.country }} }
+                    </p>
+                </section>
+            }
+
+            @if (r.phoneNumber || r.email || r.website) {
+                <section class="details-section">
+                    <h4><i class="pi pi-phone"></i> Contact</h4>
+                    <ul class="contact-list">
+                        @if (r.phoneNumber) {
+                            <li><i class="pi pi-phone"></i> {{ r.phoneNumber }}</li>
+                        }
+                        @if (r.email) {
+                            <li><i class="pi pi-envelope"></i> {{ r.email }}</li>
+                        }
+                        @if (r.website) {
+                            <li><i class="pi pi-external-link"></i> <a [href]="r.website" target="_blank" rel="noopener">{{ r.website }}</a></li>
+                        }
+                    </ul>
+                </section>
+            }
+        </div>
+    }
+</p-dialog>

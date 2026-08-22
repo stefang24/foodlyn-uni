@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Foodlyn.Shared\Foodlyn.Shared.csproj" />
+    <ProjectReference Include="..\Modules\Foodlyn.Modules.Identity\Foodlyn.Modules.Identity.csproj" />
+    <ProjectReference Include="..\Modules\Foodlyn.Modules.Menus\Foodlyn.Modules.Menus.csproj" />
+    <ProjectReference Include="..\Modules\Foodlyn.Modules.Notifications\Foodlyn.Modules.Notifications.csproj" />
+    <ProjectReference Include="..\Modules\Foodlyn.Modules.Ordering\Foodlyn.Modules.Ordering.csproj" />
+    <ProjectReference Include="..\Modules\Foodlyn.Modules.Restaurants\Foodlyn.Modules.Restaurants.csproj" />
+  </ItemGroup>
+
+</Project>

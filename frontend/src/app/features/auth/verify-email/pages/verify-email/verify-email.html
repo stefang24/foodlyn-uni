@@ -1,0 +1,76 @@
+<div class="verify-page">
+    <header class="top">
+        <button type="button" class="back" (click)="goToLogin()">
+            <i class="pi pi-arrow-left"></i> Login
+        </button>
+    </header>
+
+    <section class="card">
+        <header class="card-head">
+            <div class="brand-tile"><i class="pi pi-envelope"></i></div>
+            <span class="eyebrow">EMAIL VERIFICATION</span>
+            <h1>Verify your email</h1>
+            <p class="lead">
+                We sent a 6-digit code to <strong>{{ email }}</strong>. Enter it below to activate your account.
+            </p>
+        </header>
+
+        <div class="code-row" (paste)="onPaste($event)">
+            @for (d of digits; track $index) {
+                <input
+                    #digitInput
+                    class="code-input"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="one-time-code"
+                    maxlength="1"
+                    [value]="d"
+                    [class.filled]="d.length === 1"
+                    (input)="onDigitInput($index, $event)"
+                    (keydown)="onKeydown($index, $event)"
+                />
+            }
+        </div>
+
+        @if (submitError) {
+            <div class="error-box">
+                <i class="pi pi-exclamation-circle"></i> {{ submitError }}
+            </div>
+        }
+
+        <button
+            type="button"
+            class="submit"
+            (click)="submit()"
+            [disabled]="loadingService.isLoading(VERIFY_KEY)"
+        >
+            @if (loadingService.isLoading(VERIFY_KEY)) {
+                <i class="pi pi-spin pi-spinner"></i> Verifying...
+            } @else {
+                <ng-container>Verify email</ng-container>
+            }
+        </button>
+
+        <div class="resend">
+            <span class="resend-text">Didn't get the email?</span>
+            @if (cooldownRemaining() > 0) {
+                <span class="cooldown">
+                    Resend in {{ cooldownRemaining() }}s
+                </span>
+            } @else {
+                <button
+                    type="button"
+                    class="resend-btn"
+                    (click)="resend()"
+                    [disabled]="loadingService.isLoading(RESEND_KEY)"
+                >
+                    @if (loadingService.isLoading(RESEND_KEY)) {
+                        <i class="pi pi-spin pi-spinner"></i> Sending...
+                    } @else {
+                        <ng-container>Resend code</ng-container>
+                    }
+                </button>
+            }
+        </div>
+    </section>
+</div>

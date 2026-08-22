@@ -1,0 +1,70 @@
+<div class="history-page">
+    <header class="page-header">
+        <div>
+            <h1>Order history</h1>
+            <p>Completed, served, rejected and cancelled orders, most recent first.</p>
+        </div>
+    </header>
+
+    <section class="card picker">
+        <div class="picker-row">
+            <div class="picker-field">
+                <label for="restaurant-select">Restaurant</label>
+                <p-select
+                    id="restaurant-select"
+                    [options]="restaurantOptions()"
+                    optionLabel="label"
+                    optionValue="value"
+                    [ngModel]="selectedRestaurantId()"
+                    (ngModelChange)="onRestaurantChange($event)"
+                    placeholder="Select restaurant"
+                    appendTo="body"
+                />
+            </div>
+        </div>
+    </section>
+
+    @if (selectedRestaurantId() != null) {
+        @if (loadingService.isLoading(HISTORY_KEY) && history().length === 0) {
+            <div class="status">
+                <i class="pi pi-spin pi-spinner"></i>
+                <p>Loading history...</p>
+            </div>
+        } @else if (history().length === 0) {
+            <div class="status">
+                <i class="pi pi-inbox"></i>
+                <p>No completed orders yet.</p>
+            </div>
+        } @else {
+            <section class="grid">
+                @for (o of history(); track o.id) {
+                    <article class="order">
+                        <header>
+                            <div>
+                                <h3>Order #{{ o.id }}</h3>
+                                <p>
+                                    Table #{{ o.tableNumber }} ·
+                                    {{ (o.completedAt ?? o.servedAt ?? o.createdAt) | date: 'short' }}
+                                </p>
+                            </div>
+                            <strong>{{
+                                o.totalAmount | currency: (o.currency ?? 'USD') : 'symbol' : '1.2-2'
+                            }}</strong>
+                        </header>
+                        <div class="status-badge" [class]="statusClass(o.status)">
+                            {{ o.status }}@if (o.paymentMethod) { · {{ o.paymentMethod }} }
+                        </div>
+                        <ul class="items">
+                            @for (i of o.items; track i.id) {
+                                <li>
+                                    <span class="qty">{{ i.quantity }}×</span>
+                                    <span class="name">{{ i.name }}</span>
+                                </li>
+                            }
+                        </ul>
+                    </article>
+                }
+            </section>
+        }
+    }
+</div>

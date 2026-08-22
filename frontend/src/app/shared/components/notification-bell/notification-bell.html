@@ -1,0 +1,72 @@
+<div class="bell-wrap">
+    <button
+        type="button"
+        class="bell-btn"
+        (click)="toggle()"
+        [class.has-unread]="hasUnread()"
+        [attr.aria-label]="hasUnread() ? unreadCount() + ' unread notifications' : 'Notifications'"
+    >
+        <i class="pi pi-bell"></i>
+        @if (hasUnread()) {
+            <span class="dot">{{ unreadCount() > 99 ? '99+' : unreadCount() }}</span>
+        }
+    </button>
+
+    @if (open()) {
+        <div class="backdrop" (click)="close()"></div>
+        <aside class="panel">
+            <header class="panel-head">
+                <h3>Notifications</h3>
+                <div class="actions">
+                    @if (hasUnread()) {
+                        <button type="button" class="link-btn" (click)="markAllRead()">
+                            Mark all read
+                        </button>
+                    }
+                    <button type="button" class="icon-close" (click)="close()" aria-label="Close">
+                        <i class="pi pi-times"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="panel-body" #panelBody (scroll)="onScroll($event)">
+                @if (items().length === 0 && !loading()) {
+                    <div class="empty">
+                        <i class="pi pi-inbox"></i>
+                        <p>No notifications yet.</p>
+                    </div>
+                } @else {
+                    @for (n of items(); track n.id) {
+                        <article
+                            class="item"
+                            [class.unread]="!n.isRead"
+                            (click)="markRead(n, $event)"
+                        >
+                            <div class="ic">
+                                <i [class]="'pi ' + iconFor(n.type)"></i>
+                            </div>
+                            <div class="body">
+                                <div class="title-row">
+                                    <strong class="title">{{ n.title }}</strong>
+                                    @if (!n.isRead) { <span class="badge-dot"></span> }
+                                </div>
+                                @if (n.body) {
+                                    <p class="msg">{{ n.body }}</p>
+                                }
+                                <p class="time">{{ n.createdAt | date: 'short' }}</p>
+                            </div>
+                        </article>
+                    }
+                    @if (loading()) {
+                        <div class="loading">
+                            <i class="pi pi-spin pi-spinner"></i>
+                        </div>
+                    }
+                    @if (!hasMore() && items().length > 0) {
+                        <div class="end">All caught up</div>
+                    }
+                }
+            </div>
+        </aside>
+    }
+</div>

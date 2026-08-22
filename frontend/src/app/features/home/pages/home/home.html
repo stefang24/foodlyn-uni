@@ -1,0 +1,130 @@
+<div class="home-shell">
+    <header class="home-header">
+        <div class="left-slot">
+            <i class="pi pi-bars" id="dots" (click)="toggleSideBar()"></i>
+        </div>
+        <img src="assets/images/foodlyn.png" (click)="goToHome()" alt="" id="logo" />
+        <div class="right-slot">
+            <p class="rightbtn" (click)="goToLogin()">Login</p>
+        </div>
+    </header>
+
+    @if (opened()) {
+        <nav class="dropdown-menu">
+            <div class="item" (click)="allRestaurants(); toggleSideBar()">
+                <i class="pi pi-shop"></i>
+                <p>Restaurants</p>
+            </div>
+            <div class="item" (click)="goToFeatures(); toggleSideBar()">
+                <i class="pi pi-bolt"></i>
+                <p>Features</p>
+            </div>
+            <div class="item" (click)="goToAbout(); toggleSideBar()">
+                <i class="pi pi-info-circle"></i>
+                <p>About us</p>
+            </div>
+            <div class="item" (click)="goToRegister(); toggleSideBar()">
+                <i class="pi pi-user-plus"></i>
+                <p>Sign up</p>
+            </div>
+            <div class="item" (click)="goToLogin(); toggleSideBar()">
+                <i class="pi pi-sign-in"></i>
+                <p>Login</p>
+            </div>
+        </nav>
+    }
+
+    <div id="main">
+        <section id="hero">
+            <div class="hero-content">
+                <img src="assets/images/foodlyn_logo.png" alt="Foodlyn" class="hero-logo" />
+
+                <h1>
+                    Run your restaurant.<br />
+                    <span class="accent">Smarter.</span>
+                </h1>
+
+                <p class="hero-subtitle">
+                    Foodlyn connects your kitchen, waiters, cashiers and managers in one
+                    platform - so every order moves faster and nothing falls through the cracks.
+                </p>
+
+                <div class="hero-actions">
+                    <button type="button" class="btn btn-primary" (click)="getStarted()">
+                        Get Started
+                    </button>
+                    <button type="button" class="btn btn-ghost" (click)="browseRestaurants()">
+                        Browse Restaurants
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" #featuresSection>
+            <h2>Everything you need to run service</h2>
+            <p class="section-subtitle">From the first QR scan to the closing bill.</p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="pi pi-qrcode"></i>
+                    </div>
+                    <h3>QR Ordering</h3>
+                    <p>Guests scan their table and order from their phone. No app, no waiting.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="pi pi-book"></i>
+                    </div>
+                    <h3>Menu Management</h3>
+                    <p>Managers create and edit categories, items, prices, images and allergens - in seconds.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="pi pi-bolt"></i>
+                    </div>
+                    <h3>Kitchen Display</h3>
+                    <p>A live ticket board for the kitchen - no more paper tickets, no more confusion.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="pi pi-users"></i>
+                    </div>
+                    <h3>Role-Based Access</h3>
+                    <p>Waiters, cooks, cashiers and managers each see only the tools they need.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="pi pi-credit-card"></i>
+                    </div>
+                    <h3>Smart Payments</h3>
+                    <p>Split bills, track payment methods and close tables with a single tap.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="pi pi-chart-line"></i>
+                    </div>
+                    <h3>Live Insights</h3>
+                    <p>Track revenue, table turnover and best-selling items in real time.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="cta">
+            <h2>Ready to upgrade your service?</h2>
+            <p>Sign in and take Foodlyn for a spin.</p>
+            <button type="button" class="btn btn-primary" (click)="getStarted()">
+                Get Started
+            </button>
+        </section>
+    </div>
+
+    <footer class="home-footer">
+        <p>&copy;Foodlyn - Lynflare Company 2026</p>
+    </footer>
+</div>

@@ -1,0 +1,384 @@
+$primary: rgb(125, 7, 7);
+$primary-dark: rgb(70, 4, 4);
+$text-dark: #1a1a1a;
+$text-muted: #6b6b6b;
+$bg-soft: #f7f5f3;
+$border: #e5e5e5;
+$danger: #c0392b;
+$warn: #d97706;
+
+.kds-page {
+    padding: 24px 32px 60px;
+    background: $bg-soft;
+    min-height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    @media (max-width: 640px) {
+        padding: 16px;
+    }
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: white;
+    border: 1px solid $border;
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+
+    .title {
+        flex: 1;
+
+        h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: $text-dark;
+        }
+
+        p {
+            margin: 2px 0 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: $text-muted;
+        }
+    }
+
+    .counters {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+
+        .counter {
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 13px;
+            color: white;
+
+            &.orange {
+                background: $warn;
+            }
+
+            &.red {
+                background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+            }
+        }
+
+        .sound-btn {
+            background: white;
+            border: 1px solid $border;
+            color: $primary;
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease;
+
+            &:hover {
+                background: rgba(125, 7, 7, 0.06);
+            }
+        }
+    }
+}
+
+.status {
+    background: white;
+    border: 1px solid $border;
+    border-radius: 16px;
+    padding: 60px 24px;
+    text-align: center;
+    color: $text-muted;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+
+    i {
+        font-size: 32px;
+        color: $primary;
+    }
+
+    p {
+        margin: 0;
+    }
+}
+
+.lane {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    h2 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 700;
+        color: $text-dark;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        i {
+            color: $primary;
+        }
+    }
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+}
+
+.order {
+    background: white;
+    border: 1px solid $border;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+
+    &.order-clickable {
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+        &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+        }
+    }
+
+    &.preparing {
+        border-color: rgba(125, 7, 7, 0.4);
+    }
+
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+
+        h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: $text-dark;
+        }
+
+        p {
+            margin: 2px 0 0;
+            font-size: 12px;
+            color: $text-muted;
+        }
+
+        strong {
+            font-size: 16px;
+            font-weight: 700;
+            color: $primary;
+        }
+
+        .timer {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: $primary;
+            font-size: 18px;
+
+            strong {
+                font-size: 20px;
+                font-variant-numeric: tabular-nums;
+            }
+        }
+    }
+
+    .progress {
+        height: 8px;
+        background: rgba(125, 7, 7, 0.12);
+        border-radius: 999px;
+        overflow: hidden;
+
+        .bar {
+            height: 100%;
+            background: linear-gradient(90deg, $primary 0%, $primary-dark 100%);
+            transition: width 0.2s linear;
+        }
+    }
+
+    .items {
+        list-style: none;
+        margin: 0;
+        padding: 10px 0;
+        border-top: 1px dashed $border;
+        border-bottom: 1px dashed $border;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        li {
+            font-size: 14px;
+            color: $text-dark;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+
+            .line {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+        }
+
+        .mods {
+            list-style: none;
+            margin: 2px 0 0 18px;
+            padding: 0;
+
+            li {
+                display: list-item;
+                font-size: 12px;
+                color: $text-muted;
+                font-weight: 600;
+            }
+        }
+
+        .qty {
+            color: $primary;
+            font-weight: 700;
+            min-width: 28px;
+        }
+
+        .name {
+            font-weight: 600;
+        }
+
+        .notes {
+            font-style: italic;
+            color: $text-muted;
+            font-size: 12px;
+        }
+    }
+
+    .order-notes {
+        margin: 0;
+        background: $bg-soft;
+        padding: 8px 10px;
+        border-radius: 10px;
+        font-size: 13px;
+        color: $text-muted;
+
+        i {
+            color: $primary;
+            margin-right: 4px;
+        }
+    }
+
+    .prep-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .label {
+            font-size: 12px;
+            font-weight: 700;
+            color: $text-muted;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .chip {
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid $border;
+            background: white;
+            color: $text-dark;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+
+            &:hover {
+                border-color: $primary;
+                color: $primary;
+                background: rgba(125, 7, 7, 0.06);
+            }
+
+            &.active {
+                border-color: $primary;
+                background: $primary;
+                color: white;
+            }
+        }
+    }
+
+    .custom-row {
+        display: flex;
+        gap: 8px;
+
+        input {
+            flex: 1;
+            border: 1px solid $border;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-family: inherit;
+            color: $text-dark;
+            background: $bg-soft;
+
+            &:focus {
+                outline: none;
+                border-color: $primary;
+                background: white;
+            }
+        }
+    }
+
+    .actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+}
+
+.btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    &.primary {
+        background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+        border-color: $primary-dark;
+        color: white;
+
+        &:hover:not(:disabled) {
+            box-shadow: 0 6px 14px rgba(125, 7, 7, 0.25);
+        }
+    }
+}

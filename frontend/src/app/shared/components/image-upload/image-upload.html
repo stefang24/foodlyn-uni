@@ -1,0 +1,36 @@
+<div class="image-upload" [class.square]="aspect() === 'square'">
+    <div class="preview">
+        @if (uploading()) {
+            <div class="loading"><i class="pi pi-spin pi-spinner"></i></div>
+        } @else if (previewUrl(); as url) {
+            <img [src]="url" [alt]="label()" />
+        } @else {
+            <div class="placeholder">
+                <i class="pi pi-image"></i>
+                <span>No image</span>
+            </div>
+        }
+    </div>
+    <div class="controls">
+        <label class="btn ghost small">
+            <i class="pi pi-upload"></i> {{ value() ? 'Replace' : 'Upload' }}
+            <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                (change)="onPick($event)"
+                [disabled]="disabled() || uploading()"
+                hidden
+            />
+        </label>
+        @if (value()) {
+            <button
+                type="button"
+                class="btn ghost small danger"
+                (click)="clear()"
+                [disabled]="disabled() || uploading()"
+            >
+                <i class="pi pi-trash"></i> Remove
+            </button>
+        }
+    </div>
+</div>

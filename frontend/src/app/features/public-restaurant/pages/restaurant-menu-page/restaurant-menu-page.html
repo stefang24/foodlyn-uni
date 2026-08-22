@@ -1,0 +1,81 @@
+<div class="mpage">
+    <header class="mtop">
+        <button type="button" class="back" (click)="back()">
+            <i class="pi pi-arrow-left"></i> Back
+        </button>
+        @if (restaurant(); as r) {
+            <div class="title">
+                <h1>{{ r.name }} - Menu</h1>
+                @if (r.cuisine) { <span class="sub">{{ r.cuisine }}</span> }
+            </div>
+        }
+    </header>
+
+    @if (loading()) {
+        <div class="state">
+            <i class="pi pi-spin pi-spinner"></i>
+            <p>Loading menu...</p>
+        </div>
+    } @else if (error()) {
+        <div class="state">
+            <i class="pi pi-exclamation-triangle"></i>
+            <p>{{ error() }}</p>
+        </div>
+    } @else if (menus().length === 0) {
+        <div class="state">
+            <i class="pi pi-inbox"></i>
+            <p>No menus available yet.</p>
+        </div>
+    } @else {
+        @for (menu of menus(); track menu.id) {
+            <section class="menu-section">
+                <h2>{{ menu.name }}</h2>
+                @if (menu.description) { <p class="menu-desc">{{ menu.description }}</p> }
+
+                @for (cat of menu.categories; track cat.id) {
+                    <div class="category">
+                        <h3>{{ cat.name }}</h3>
+                        @if (cat.description) { <p class="cat-desc">{{ cat.description }}</p> }
+
+                        <div class="items">
+                            @for (item of cat.items; track item.id) {
+                                <article class="item" [class.unavailable]="!item.isAvailable">
+                                    @if (item.thumbnailUrl || item.imageUrl) {
+                                        <img [src]="(item.thumbnailUrl || item.imageUrl) | imageUrl" alt="" class="thumb" />
+                                    }
+                                    <div class="item-body">
+                                        <div class="item-head">
+                                            <h4>{{ item.name }}</h4>
+                                            <div class="price-block">
+                                                @if (item.discountedPrice != null) {
+                                                    <span class="old">{{ item.price | currency: currency() : 'symbol' : '1.2-2' }}</span>
+                                                    <span class="new">{{ item.discountedPrice | currency: currency() : 'symbol' : '1.2-2' }}</span>
+                                                } @else {
+                                                    <span class="new">{{ item.price | currency: currency() : 'symbol' : '1.2-2' }}</span>
+                                                }
+                                            </div>
+                                        </div>
+                                        @if (item.description) { <p>{{ item.description }}</p> }
+
+                                        <div class="badges">
+                                            @if (item.isVegetarian) { <span class="badge veg">Veg</span> }
+                                            @if (item.isVegan) { <span class="badge vegan">Vegan</span> }
+                                            @if (item.isGlutenFree) { <span class="badge gf">GF</span> }
+                                            @if (item.isFeatured) { <span class="badge featured">★ Featured</span> }
+                                            @if (item.isNew) { <span class="badge new">New</span> }
+                                            @if (!item.isAvailable) { <span class="badge off">Unavailable</span> }
+                                        </div>
+                                    </div>
+                                </article>
+                            }
+
+                            @if (cat.items.length === 0) {
+                                <div class="cat-empty">No items in this category.</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </section>
+        }
+    }
+</div>

@@ -1,0 +1,802 @@
+<div class="rm-page">
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">RESTAURANTS</p>
+            <h1>Manage your branches and stores</h1>
+        </div>
+    </section>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sb-head">
+                <span>Restaurants</span>
+                <span class="sb-count">{{ restaurants().length }}</span>
+            </div>
+            @if (restaurants().length === 0) {
+                <div class="sb-empty">No restaurants assigned.</div>
+            } @else {
+                <ul class="sb-list">
+                    @for (r of restaurants(); track r.id) {
+                        <li
+                            [class.active]="selected()?.id === r.id"
+                            (click)="select(r)"
+                        >
+                            <div class="sb-avatar">{{ r.name.charAt(0).toUpperCase() }}</div>
+                            <div class="sb-body">
+                                <div class="sb-name">{{ r.name }}</div>
+                                <div class="sb-sub">{{ r.city || r.country || '-' }}</div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </aside>
+
+        @if (selected(); as r) {
+            <section class="panel">
+                <header class="panel-head">
+                    <div class="ph-left">
+                        <h2>{{ r.name }}</h2>
+                        <p>{{ r.cuisine || 'Restaurant' }} · {{ r.city || '-' }}</p>
+                    </div>
+                    <span class="status-pill" [class.active]="r.isActive">
+                        {{ r.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                </header>
+
+                <nav class="tabs">
+                    <button
+                        type="button"
+                        class="tab"
+                        [class.active]="tab() === 'tables'"
+                        (click)="setTab('tables')"
+                    >
+                        <i class="pi pi-table"></i> Tables
+                    </button>
+                    <button
+                        type="button"
+                        class="tab"
+                        [class.active]="tab() === 'users'"
+                        (click)="setTab('users')"
+                    >
+                        <i class="pi pi-users"></i> Users
+                    </button>
+                    <button
+                        type="button"
+                        class="tab"
+                        [class.active]="tab() === 'hours'"
+                        (click)="setTab('hours')"
+                    >
+                        <i class="pi pi-clock"></i> Opening Hours
+                    </button>
+                    <button
+                        type="button"
+                        class="tab"
+                        [class.active]="tab() === 'location'"
+                        (click)="setTab('location')"
+                    >
+                        <i class="pi pi-map-marker"></i> Location
+                    </button>
+                    <button
+                        type="button"
+                        class="tab"
+                        [class.active]="tab() === 'settings'"
+                        (click)="setTab('settings')"
+                    >
+                        <i class="pi pi-cog"></i> Settings
+                    </button>
+                </nav>
+
+                <div class="tab-body">
+                    @if (tab() === 'tables') {
+                        <div class="toolbar">
+                            <button class="btn primary" type="button" (click)="openCreateTable()">
+                                <i class="pi pi-plus"></i> Add table
+                            </button>
+                            <button class="btn ghost" type="button" (click)="openBulkTable()">
+                                <i class="pi pi-th-large"></i> Bulk create
+                            </button>
+                            <button
+                                class="btn ghost"
+                                type="button"
+                                (click)="printQrLabels()"
+                                [disabled]="!canPrintLabels()"
+                                title="Print QR labels for all active tables"
+                            >
+                                <i class="pi pi-print"></i> Print labels
+                            </button>
+                            <div class="ts-stats">
+                                <span><strong>{{ tableStats().total }}</strong> total</span>
+                                <span><strong>{{ tableStats().free }}</strong> free</span>
+                                <span><strong>{{ tableStats().occupied }}</strong> occupied</span>
+                                <span><strong>{{ tableStats().cleaning }}</strong> cleaning</span>
+                            </div>
+                        </div>
+
+                        <div class="tables-grid">
+                            @for (t of tables(); track t.id) {
+                                <article class="tcard" [class]="tableStatusClass(t.status)">
+                                    <div class="tcard-head">
+                                        <div class="tnum">#{{ t.number }}</div>
+                                        <button
+                                            type="button"
+                                            class="t-icon-btn"
+                                            (click)="openQr(t)"
+                                            title="Show QR"
+                                        >
+                                            <i class="pi pi-qrcode"></i>
+                                        </button>
+                                    </div>
+                                    @if (t.label) { <div class="tlabel">{{ t.label }}</div> }
+                                    <div class="tmeta">
+                                        <span><i class="pi pi-users"></i> {{ t.capacity }}</span>
+                                        <span>{{ t.status }}</span>
+                                    </div>
+                                    <div class="t-actions">
+                                        <button
+                                            type="button"
+                                            class="t-icon-btn"
+                                            (click)="openEditTable(t)"
+                                            [disabled]="t.status !== 'Free'"
+                                            [title]="t.status !== 'Free' ? 'Only free tables can be edited' : 'Edit table'"
+                                        >
+                                            <i class="pi pi-pencil"></i>
+                                        </button>
+                                        @if (isAdmin) {
+                                            <button
+                                                type="button"
+                                                class="t-icon-btn"
+                                                (click)="rotateToken(t)"
+                                                [disabled]="t.status !== 'Free'"
+                                                [title]="t.status !== 'Free' ? 'Only free tables can be rotated' : 'Rotate QR token'"
+                                            >
+                                                <i class="pi pi-refresh"></i>
+                                            </button>
+                                        }
+                                        <button
+                                            type="button"
+                                            class="t-icon-btn danger"
+                                            (click)="deleteTable(t)"
+                                            [disabled]="t.status !== 'Free'"
+                                            [title]="t.status !== 'Free' ? 'Only free tables can be deleted' : 'Delete table'"
+                                        >
+                                            <i class="pi pi-trash"></i>
+                                        </button>
+                                    </div>
+                                </article>
+                            }
+
+                            @if (tables().length === 0) {
+                                <div class="empty-state">
+                                    <i class="pi pi-table"></i>
+                                    <p>No tables yet. Add your first table.</p>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    @if (tab() === 'users') {
+                        <div class="toolbar">
+                            <button class="btn primary" type="button" (click)="openCreateAccount()">
+                                <i class="pi pi-user-plus"></i> New account
+                            </button>
+                        </div>
+
+                        <div class="user-filters">
+                            <span class="search-box">
+                                <i class="pi pi-search"></i>
+                                <input
+                                    type="text"
+                                    pInputText
+                                    placeholder="Search by name, username, email..."
+                                    [value]="userSearch()"
+                                    (input)="onUserSearchChange($any($event.target).value)"
+                                />
+                            </span>
+                            <p-select
+                                placeholder="Role"
+                                [options]="roleOptions"
+                                optionLabel="label"
+                                optionValue="value"
+                                [showClear]="true"
+                                [ngModel]="userRoleFilter()"
+                                (ngModelChange)="setUserRoleFilter($event)"
+                                appendTo="body"
+                            />
+                            <p-select
+                                placeholder="Status"
+                                [options]="userActiveOptions"
+                                optionLabel="label"
+                                optionValue="value"
+                                [showClear]="true"
+                                [ngModel]="userActiveFilter()"
+                                (ngModelChange)="setUserActiveFilter($event)"
+                                appendTo="body"
+                            />
+                        </div>
+
+                        <p-table
+                            [value]="users()"
+                            [lazy]="true"
+                            [paginator]="true"
+                            [rows]="10"
+                            [totalRecords]="usersTotal()"
+                            [loading]="usersLoading()"
+                            (onLazyLoad)="onUsersLazyLoad($event)"
+                            [rowsPerPageOptions]="[10, 25, 50]"
+                            class="p-datatable-sm users-table"
+                            dataKey="id"
+                        >
+                            <ng-template pTemplate="header">
+                                <tr>
+                                    <th pSortableColumn="username">Username <p-sortIcon field="username" /></th>
+                                    <th pSortableColumn="fullName">Full name <p-sortIcon field="fullName" /></th>
+                                    <th pSortableColumn="email">Email <p-sortIcon field="email" /></th>
+                                    <th pSortableColumn="role">Role <p-sortIcon field="role" /></th>
+                                    <th pSortableColumn="isActive">Status <p-sortIcon field="isActive" /></th>
+                                    <th pSortableColumn="createdAt">Joined <p-sortIcon field="createdAt" /></th>
+                                    <th>Actions</th>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="body" let-row>
+                                <tr>
+                                    <td><strong>{{ row.username }}</strong></td>
+                                    <td>{{ (row.firstName || '') + ' ' + (row.lastName || '') }}</td>
+                                    <td>{{ row.email }}</td>
+                                    <td>
+                                        <span class="role-chip" [attr.data-role]="row.role">{{ row.role }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="status-pill" [class.active]="row.isActive">
+                                            {{ row.isActive ? 'Active' : 'Disabled' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ row.createdAt | date: 'mediumDate' }}</td>
+                                    <td>
+                                        <div class="row-actions">
+                                            <button
+                                                type="button"
+                                                class="t-icon-btn"
+                                                (click)="openEditUser(row)"
+                                                title="Edit user"
+                                            >
+                                                <i class="pi pi-pencil"></i>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="t-icon-btn"
+                                                (click)="openResetPassword(row)"
+                                                title="Reset password"
+                                            >
+                                                <i class="pi pi-key"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="emptymessage">
+                                <tr>
+                                    <td colspan="7" class="empty">No users match your filters.</td>
+                                </tr>
+                            </ng-template>
+                        </p-table>
+                    }
+
+                    @if (tab() === 'hours') {
+                        <div class="hours-card">
+                            @if (hoursIncomplete()) {
+                                <div class="hours-banner">
+                                    <i class="pi pi-info-circle"></i>
+                                    Working hours are not set yet. Configure your schedule for all 7 days.
+                                </div>
+                            }
+                            <div class="hours-list">
+                                @for (dow of DAY_INDICES; track dow) {
+                                    @let day = hoursForDay(dow);
+                                    <div class="hours-row" [class.off]="!day.isOpen">
+                                        <div class="day-name">{{ DAY_NAMES[dow] }}</div>
+                                        <label class="day-toggle">
+                                            <input
+                                                type="checkbox"
+                                                [checked]="day.isOpen"
+                                                (change)="toggleDay(dow, $any($event.target).checked)"
+                                            />
+                                            <span>Working</span>
+                                        </label>
+                                        <input
+                                            type="time"
+                                            class="time-input"
+                                            [value]="day.openTime"
+                                            (change)="setDayTime(dow, 'openTime', $any($event.target).value)"
+                                            [disabled]="!day.isOpen"
+                                        />
+                                        <span class="to">to</span>
+                                        <input
+                                            type="time"
+                                            class="time-input"
+                                            [value]="day.closeTime"
+                                            (change)="setDayTime(dow, 'closeTime', $any($event.target).value)"
+                                            [disabled]="!day.isOpen"
+                                        />
+                                    </div>
+                                }
+                            </div>
+                            <div class="form-actions">
+                                <button
+                                    type="button"
+                                    class="btn primary"
+                                    (click)="saveOpeningHours()"
+                                    [disabled]="loadingService.isLoading(SAVE_HOURS_KEY)"
+                                >
+                                    @if (loadingService.isLoading(SAVE_HOURS_KEY)) {
+                                        <i class="pi pi-spin pi-spinner"></i>
+                                    } @else {
+                                        Save Schedule
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    }
+
+                    @if (tab() === 'location') {
+                        <form [formGroup]="locationForm" (ngSubmit)="saveLocation()" class="form">
+                            <div class="grid-2">
+                                <div class="field span-2">
+                                    <label for="street">Street address</label>
+                                    <input pInputText id="street" type="text" formControlName="streetAddress" />
+                                </div>
+                                <div class="field">
+                                    <label for="city">City</label>
+                                    <input pInputText id="city" type="text" formControlName="city" />
+                                </div>
+                                <div class="field">
+                                    <label for="postal">Postal code</label>
+                                    <input pInputText id="postal" type="text" formControlName="postalCode" />
+                                </div>
+                                <div class="field">
+                                    <label for="country">Country</label>
+                                    <input pInputText id="country" type="text" formControlName="country" />
+                                </div>
+                                <div class="field">
+                                    <label for="lat">Latitude</label>
+                                    <input pInputText id="lat" type="number" step="0.000001" formControlName="latitude" />
+                                </div>
+                                <div class="field">
+                                    <label for="lng">Longitude</label>
+                                    <input pInputText id="lng" type="number" step="0.000001" formControlName="longitude" />
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn primary" [disabled]="loadingService.isLoading(SAVE_RESTAURANT_KEY)">
+                                    @if (loadingService.isLoading(SAVE_RESTAURANT_KEY)) {
+                                        <i class="pi pi-spin pi-spinner"></i>
+                                    } @else {
+                                        Save location
+                                    }
+                                </button>
+                            </div>
+                        </form>
+                    }
+
+                    @if (tab() === 'settings') {
+                        <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="form">
+                            <div class="grid-2">
+                                <div class="field span-2">
+                                    <label for="desc">Description</label>
+                                    <textarea pTextarea id="desc" rows="3" formControlName="description"></textarea>
+                                </div>
+                                <div class="field">
+                                    <label for="email">Email</label>
+                                    <input pInputText id="email" type="email" formControlName="email" />
+                                </div>
+                                <div class="field">
+                                    <label for="phone">Phone</label>
+                                    <input pInputText id="phone" type="text" formControlName="phoneNumber" />
+                                </div>
+                                <div class="field span-2">
+                                    <label for="website">Website</label>
+                                    <input pInputText id="website" type="url" formControlName="website" />
+                                </div>
+                                <div class="field">
+                                    <label for="cuisine">Cuisine</label>
+                                    <input pInputText id="cuisine" type="text" formControlName="cuisine" />
+                                </div>
+                                <div class="field">
+                                    <label for="currency">Currency</label>
+                                    <p-select
+                                        id="currency"
+                                        formControlName="currency"
+                                        [options]="currencyOptions()"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        placeholder="Select currency"
+                                        appendTo="body"
+                                    />
+                                </div>
+                                <div class="field">
+                                    <label for="tz">Time zone</label>
+                                    <p-select
+                                        id="tz"
+                                        formControlName="timeZone"
+                                        [options]="timezoneOptions()"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        placeholder="Select time zone"
+                                        appendTo="body"
+                                    />
+                                </div>
+                                <div class="field span-2">
+                                    <label>Logo</label>
+                                    <app-image-upload formControlName="logoUrl" folder="restaurants/logos" aspect="square" />
+                                </div>
+                                <div class="field span-2">
+                                    <label>Cover image</label>
+                                    <app-image-upload formControlName="coverImageUrl" folder="restaurants/covers" />
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn primary" [disabled]="loadingService.isLoading(SAVE_RESTAURANT_KEY)">
+                                    @if (loadingService.isLoading(SAVE_RESTAURANT_KEY)) {
+                                        <i class="pi pi-spin pi-spinner"></i>
+                                    } @else {
+                                        Save settings
+                                    }
+                                </button>
+                            </div>
+                        </form>
+                    }
+                </div>
+            </section>
+        }
+    </div>
+</div>
+
+<p-dialog
+    [visible]="createAccountOpen()"
+    (visibleChange)="$event ? createAccountOpen.set(true) : closeCreateAccount()"
+    [modal]="true"
+    [style]="{ width: '640px' }"
+    header="New account"
+    [dismissableMask]="true"
+>
+    <form [formGroup]="createAccountForm" (ngSubmit)="submitCreateAccount()" class="dlg-form">
+        <div class="grid-2">
+            <div class="field">
+                <label>First name</label>
+                <input pInputText type="text" formControlName="firstName" />
+            </div>
+            <div class="field">
+                <label>Last name</label>
+                <input pInputText type="text" formControlName="lastName" />
+            </div>
+            <div class="field">
+                <label>Username *</label>
+                <input pInputText type="text" formControlName="username" />
+                @if (isInvalid(createAccountForm, 'username')) {
+                    <small class="error">{{ getErrorMessage(createAccountForm, 'username') }}</small>
+                }
+            </div>
+            <div class="field">
+                <label>Email *</label>
+                <input pInputText type="email" formControlName="email" />
+                @if (isInvalid(createAccountForm, 'email')) {
+                    <small class="error">{{ getErrorMessage(createAccountForm, 'email') }}</small>
+                }
+            </div>
+            <div class="field">
+                <label>Password *</label>
+                <p-password formControlName="password" [feedback]="false" [toggleMask]="true" [fluid]="true" />
+                @if (isInvalid(createAccountForm, 'password')) {
+                    <small class="error">{{ getErrorMessage(createAccountForm, 'password') }}</small>
+                }
+            </div>
+            <div class="field">
+                <label>Confirm password *</label>
+                <p-password formControlName="confirmPassword" [feedback]="false" [toggleMask]="true" [fluid]="true" />
+                @if (showMismatch()) {
+                    <small class="error">Passwords do not match</small>
+                }
+            </div>
+            <div class="field span-2">
+                <label>Role *</label>
+                <p-select
+                    formControlName="role"
+                    [options]="roleOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select role"
+                    appendTo="body"
+                />
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="button" class="btn ghost" (click)="closeCreateAccount()">Cancel</button>
+            <button
+                type="submit"
+                class="btn primary"
+                [disabled]="createAccountForm.invalid || loadingService.isLoading(CREATE_ACCOUNT_KEY)"
+            >
+                @if (loadingService.isLoading(CREATE_ACCOUNT_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                } @else {
+                    Create
+                }
+            </button>
+        </div>
+    </form>
+</p-dialog>
+
+<p-dialog
+    [visible]="createTableOpen()"
+    (visibleChange)="$event ? createTableOpen.set(true) : closeCreateTable()"
+    [modal]="true"
+    [style]="{ width: '480px' }"
+    header="Add table"
+    [dismissableMask]="true"
+>
+    <form [formGroup]="tableForm" (ngSubmit)="submitCreateTable()" class="dlg-form">
+        <div class="grid-2">
+            <div class="field">
+                <label>Number *</label>
+                <input pInputText type="number" formControlName="number" min="1" />
+            </div>
+            <div class="field">
+                <label>Capacity *</label>
+                <input pInputText type="number" formControlName="capacity" min="1" max="50" />
+            </div>
+            <div class="field span-2">
+                <label>Label</label>
+                <input pInputText type="text" formControlName="label" placeholder="e.g. Terrace 3" />
+            </div>
+            <div class="field span-2">
+                <label>Location</label>
+                <input pInputText type="text" formControlName="location" placeholder="Zone" />
+            </div>
+            <div class="field span-2">
+                <label>Notes</label>
+                <textarea pTextarea rows="2" formControlName="notes"></textarea>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="button" class="btn ghost" (click)="closeCreateTable()">Cancel</button>
+            <button
+                type="submit"
+                class="btn primary"
+                [disabled]="tableForm.invalid || loadingService.isLoading(SAVE_TABLE_KEY)"
+            >
+                @if (loadingService.isLoading(SAVE_TABLE_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                } @else {
+                    Add
+                }
+            </button>
+        </div>
+    </form>
+</p-dialog>
+
+<p-dialog
+    [visible]="bulkTableOpen()"
+    (visibleChange)="$event ? bulkTableOpen.set(true) : closeBulkTable()"
+    [modal]="true"
+    [style]="{ width: '420px' }"
+    header="Bulk create tables"
+    [dismissableMask]="true"
+>
+    <form [formGroup]="bulkForm" (ngSubmit)="submitBulkTable()" class="dlg-form">
+        <div class="grid-2">
+            <div class="field">
+                <label>Count *</label>
+                <input pInputText type="number" formControlName="count" min="1" max="200" />
+            </div>
+            <div class="field">
+                <label>Start from</label>
+                <input pInputText type="number" formControlName="startingNumber" min="0" />
+            </div>
+            <div class="field span-2">
+                <label>Capacity *</label>
+                <input pInputText type="number" formControlName="capacity" min="1" max="50" />
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="button" class="btn ghost" (click)="closeBulkTable()">Cancel</button>
+            <button
+                type="submit"
+                class="btn primary"
+                [disabled]="bulkForm.invalid || loadingService.isLoading(SAVE_TABLE_KEY)"
+            >
+                @if (loadingService.isLoading(SAVE_TABLE_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                } @else {
+                    Create
+                }
+            </button>
+        </div>
+    </form>
+</p-dialog>
+
+<p-dialog
+    [visible]="editTableOpen()"
+    (visibleChange)="$event ? editTableOpen.set(true) : closeEditTable()"
+    [modal]="true"
+    [style]="{ width: '480px' }"
+    header="Edit table"
+    [dismissableMask]="true"
+>
+    @if (editingTable) {
+        <form [formGroup]="editTableForm" (ngSubmit)="submitEditTable()" class="dlg-form">
+            <div class="grid-2">
+                <div class="field">
+                    <label>Number *</label>
+                    <input pInputText type="number" formControlName="number" min="1" />
+                </div>
+                <div class="field">
+                    <label>Capacity *</label>
+                    <input pInputText type="number" formControlName="capacity" min="1" max="50" />
+                </div>
+                <div class="field span-2">
+                    <label>Label</label>
+                    <input pInputText type="text" formControlName="label" />
+                </div>
+                <div class="field span-2">
+                    <label>Location</label>
+                    <input pInputText type="text" formControlName="location" />
+                </div>
+                <div class="field span-2">
+                    <label>Notes</label>
+                    <textarea pTextarea rows="2" formControlName="notes"></textarea>
+                </div>
+                <div class="field">
+                    <label>Active</label>
+                    <p-toggleswitch formControlName="isActive" />
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn ghost" (click)="closeEditTable()">Cancel</button>
+                <button
+                    type="submit"
+                    class="btn primary"
+                    [disabled]="editTableForm.invalid || loadingService.isLoading(SAVE_TABLE_KEY)"
+                >
+                    @if (loadingService.isLoading(SAVE_TABLE_KEY)) {
+                        <i class="pi pi-spin pi-spinner"></i>
+                    } @else {
+                        Save
+                    }
+                </button>
+            </div>
+        </form>
+    }
+</p-dialog>
+
+<p-dialog
+    [visible]="editUserOpen()"
+    (visibleChange)="$event ? editUserOpen.set(true) : closeEditUser()"
+    [modal]="true"
+    [style]="{ width: '640px' }"
+    header="Edit user"
+    [dismissableMask]="true"
+>
+    @if (editingUser) {
+        <form [formGroup]="editUserForm" (ngSubmit)="submitEditUser()" class="dlg-form">
+            <div class="grid-2">
+                <div class="field">
+                    <label>First name</label>
+                    <input pInputText type="text" formControlName="firstName" />
+                </div>
+                <div class="field">
+                    <label>Last name</label>
+                    <input pInputText type="text" formControlName="lastName" />
+                </div>
+                <div class="field">
+                    <label>Username *</label>
+                    <input pInputText type="text" formControlName="username" />
+                    @if (isInvalid(editUserForm, 'username')) {
+                        <small class="error">{{ getErrorMessage(editUserForm, 'username') }}</small>
+                    }
+                </div>
+                <div class="field">
+                    <label>Email *</label>
+                    <input pInputText type="email" formControlName="email" />
+                    @if (isInvalid(editUserForm, 'email')) {
+                        <small class="error">{{ getErrorMessage(editUserForm, 'email') }}</small>
+                    }
+                </div>
+                <div class="field">
+                    <label>Role *</label>
+                    <p-select
+                        formControlName="role"
+                        [options]="roleOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Select role"
+                        appendTo="body"
+                    />
+                </div>
+                <div class="field">
+                    <label>Active</label>
+                    <p-toggleswitch formControlName="isActive" />
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn ghost" (click)="closeEditUser()">Cancel</button>
+                <button
+                    type="submit"
+                    class="btn primary"
+                    [disabled]="editUserForm.invalid || loadingService.isLoading(SAVE_USER_KEY)"
+                >
+                    @if (loadingService.isLoading(SAVE_USER_KEY)) {
+                        <i class="pi pi-spin pi-spinner"></i>
+                    } @else {
+                        Save
+                    }
+                </button>
+            </div>
+        </form>
+    }
+</p-dialog>
+
+<p-dialog
+    [visible]="resetPasswordOpen()"
+    (visibleChange)="$event ? resetPasswordOpen.set(true) : closeResetPassword()"
+    [modal]="true"
+    [style]="{ width: '460px' }"
+    header="Reset password"
+    [dismissableMask]="true"
+>
+    @if (editingUser; as u) {
+        <form [formGroup]="resetPasswordForm" (ngSubmit)="submitResetPassword()" class="dlg-form">
+            <p class="hint">Set a new password for <strong>{{ u.username }}</strong>. They will need to use it next time they log in.</p>
+            <div class="field">
+                <label>New password *</label>
+                <p-password formControlName="newPassword" [feedback]="false" [toggleMask]="true" [fluid]="true" />
+                @if (isInvalid(resetPasswordForm, 'newPassword')) {
+                    <small class="error">{{ getErrorMessage(resetPasswordForm, 'newPassword') }}</small>
+                }
+            </div>
+            <div class="field">
+                <label>Confirm password *</label>
+                <p-password formControlName="confirmPassword" [feedback]="false" [toggleMask]="true" [fluid]="true" />
+                @if (showResetMismatch()) {
+                    <small class="error">Passwords do not match</small>
+                }
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn ghost" (click)="closeResetPassword()">Cancel</button>
+                <button
+                    type="submit"
+                    class="btn primary"
+                    [disabled]="resetPasswordForm.invalid || loadingService.isLoading(RESET_PASSWORD_KEY)"
+                >
+                    @if (loadingService.isLoading(RESET_PASSWORD_KEY)) {
+                        <i class="pi pi-spin pi-spinner"></i>
+                    } @else {
+                        Reset password
+                    }
+                </button>
+            </div>
+        </form>
+    }
+</p-dialog>
+
+<p-dialog
+    [visible]="qrOpen()"
+    (visibleChange)="$event ? qrOpen.set(true) : closeQr()"
+    [modal]="true"
+    [style]="{ width: '380px' }"
+    header="Table QR"
+    [dismissableMask]="true"
+>
+    @if (qrTable(); as t) {
+        <div class="qr-body">
+            <h3>Table #{{ t.number }}</h3>
+            <img [src]="qrImageUrl(t.qrToken)" alt="QR code" class="qr-img" />
+            <p class="qr-link">{{ qrUrl(t.qrToken) }}</p>
+            <div class="form-actions">
+                <button type="button" class="btn ghost" (click)="copyQrLink(t.qrToken)">
+                    <i class="pi pi-copy"></i> Copy link
+                </button>
+                <button type="button" class="btn primary" (click)="closeQr()">Close</button>
+            </div>
+        </div>
+    }
+</p-dialog>

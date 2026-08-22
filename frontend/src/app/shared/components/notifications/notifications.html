@@ -1,0 +1,20 @@
+@if (items().length > 0) {
+    <div class="notify-stack">
+        @for (n of items(); track n.id) {
+            <div class="notify-card" [class]="'sev-' + n.severity">
+                <i class="notify-icon" [class]="iconFor(n.severity)"></i>
+                <div class="notify-body">
+                    @if (n.summary) {
+                        <div class="notify-title">{{ n.summary }}</div>
+                    }
+                    @if (n.detail) {
+                        <div class="notify-detail">{{ n.detail }}</div>
+                    }
+                </div>
+                <button type="button" class="notify-close" (click)="dismiss(n.id)" aria-label="Close">
+                    <i class="pi pi-times"></i>
+                </button>
+            </div>
+        }
+    </div>
+}

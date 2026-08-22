@@ -1,0 +1,43 @@
+<div class="staff-pick">
+    <header class="head">
+        <h1>New order</h1>
+        <p class="lead">Pick a restaurant and table to place an order on behalf of a customer.</p>
+    </header>
+
+    @if (restaurants().length > 1) {
+        <section class="step">
+            <label>Restaurant</label>
+            <p-select
+                [options]="restaurantOptions()"
+                [ngModel]="selectedRestaurantId()"
+                (ngModelChange)="selectRestaurant($event)"
+                placeholder="Select restaurant"
+                appendTo="body"
+            ></p-select>
+        </section>
+    }
+
+    @if (selectedRestaurantId() !== null) {
+        <section class="step">
+            <h2>Tables</h2>
+            @if (tables().length === 0) {
+                <p class="empty">No tables found for this restaurant.</p>
+            } @else {
+                <div class="grid">
+                    @for (t of tables(); track t.id) {
+                        <button type="button" class="table-card" [disabled]="!canPick(t)" [class.blocked]="!canPick(t)" (click)="pickTable(t)">
+                            <div class="num">#{{ t.number }}</div>
+                            @if (t.label) {
+                                <div class="label">{{ t.label }}</div>
+                            }
+                            <div class="status" [class]="statusBadgeClass(t.status)">{{ t.status }}</div>
+                            @if (t.activeOrders > 0) {
+                                <div class="active-count">{{ t.activeOrders }} active</div>
+                            }
+                        </button>
+                    }
+                </div>
+            }
+        </section>
+    }
+</div>

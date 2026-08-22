@@ -1,0 +1,189 @@
+<div class="dashboard">
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">OVERVIEW</p>
+            <h1>Platform at a glance</h1>
+        </div>
+    </section>
+
+    <section class="stats-grid">
+        <article class="stat-card">
+            <div class="stat-icon green"><i class="pi pi-shop"></i></div>
+            <div class="stat-value">{{ totalRestaurants() }}</div>
+            <div class="stat-label">Restaurants</div>
+            <div class="stat-sub">
+                {{ activeRestaurants() }} active · {{ inactiveRestaurants() }} inactive
+            </div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-icon blue"><i class="pi pi-users"></i></div>
+            <div class="stat-value">{{ totalUsers() }}</div>
+            <div class="stat-label">Users</div>
+            <div class="stat-sub">{{ activeUsers() }} active</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-icon purple"><i class="pi pi-briefcase"></i></div>
+            <div class="stat-value">{{ managers() }}</div>
+            <div class="stat-label">Managers</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-icon orange"><i class="pi pi-user"></i></div>
+            <div class="stat-value">{{ staff() }}</div>
+            <div class="stat-label">Floor staff</div>
+            <div class="stat-sub">Cashiers, cooks, waiters</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-icon red"><i class="pi pi-bolt"></i></div>
+            <div class="stat-value">{{ inFlightOrders() }}</div>
+            <div class="stat-label">Orders in flight</div>
+            <div class="stat-sub">{{ restaurantsServing() }} restaurant(s) serving</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-icon green"><i class="pi pi-user-plus"></i></div>
+            <div class="stat-value">{{ recentSignups() }}</div>
+            <div class="stat-label">New customers</div>
+            <div class="stat-sub">last 7 days</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-icon blue"><i class="pi pi-heart"></i></div>
+            <div class="stat-value">{{ customers() }}</div>
+            <div class="stat-label">Customers</div>
+        </article>
+    </section>
+
+    <section class="panel-grid">
+        <article class="panel">
+            <header>
+                <h2>Role distribution</h2>
+                <p>How registered accounts break down across the platform.</p>
+            </header>
+            @if (roleBreakdown().length === 0) {
+                <div class="empty">No users yet.</div>
+            } @else {
+                <ul class="bar-list">
+                    @for (item of roleBreakdown(); track item.role) {
+                        <li>
+                            <div class="bar-row">
+                                <span class="bar-label">{{ item.role }}</span>
+                                <span class="bar-count">{{ item.count }} · {{ item.percent }}%</span>
+                            </div>
+                            <div class="bar-track">
+                                <span
+                                    class="bar-fill"
+                                    [style.width.%]="item.percent"
+                                    [style.background]="item.color"
+                                ></span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </article>
+
+        <article class="panel">
+            <header>
+                <h2>Cuisines on the platform</h2>
+                <p>Top 6 cuisine tags across all restaurants.</p>
+            </header>
+            @if (cuisineBreakdown().length === 0) {
+                <div class="empty">No restaurants yet.</div>
+            } @else {
+                <ul class="bar-list">
+                    @for (item of cuisineBreakdown(); track item.name) {
+                        <li>
+                            <div class="bar-row">
+                                <span class="bar-label">{{ item.name }}</span>
+                                <span class="bar-count">{{ item.count }} · {{ item.percent }}%</span>
+                            </div>
+                            <div class="bar-track">
+                                <span class="bar-fill cuisine" [style.width.%]="item.percent"></span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </article>
+
+        <article class="panel">
+            <header>
+                <h2>Top restaurants by orders</h2>
+                <p>Most completed orders all-time.</p>
+            </header>
+            @if (topRestaurantsByOrders().length === 0) {
+                <div class="empty">No completed orders yet.</div>
+            } @else {
+                <ul class="bar-list">
+                    @for (item of topRestaurantsByOrders(); track item.restaurant.id) {
+                        <li>
+                            <div class="bar-row">
+                                <span class="bar-label">{{ item.restaurant.name }}</span>
+                                <span class="bar-count">
+                                    {{ item.orderCount }} orders ·
+                                    {{ item.revenue | currency: (item.currency ?? 'USD') : 'symbol' : '1.0-0' }}
+                                </span>
+                            </div>
+                            <div class="bar-track">
+                                <span class="bar-fill orders" [style.width.%]="item.percent"></span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </article>
+
+        <article class="panel">
+            <header>
+                <h2>Top restaurants by revenue</h2>
+                <p>Highest lifetime earnings.</p>
+            </header>
+            @if (topRestaurantsByRevenue().length === 0) {
+                <div class="empty">No revenue recorded yet.</div>
+            } @else {
+                <ul class="bar-list">
+                    @for (item of topRestaurantsByRevenue(); track item.restaurant.id) {
+                        <li>
+                            <div class="bar-row">
+                                <span class="bar-label">{{ item.restaurant.name }}</span>
+                                <span class="bar-count">
+                                    {{ item.revenue | currency: (item.currency ?? 'USD') : 'symbol' : '1.0-0' }}
+                                    · {{ item.orderCount }} orders
+                                </span>
+                            </div>
+                            <div class="bar-track">
+                                <span class="bar-fill revenue" [style.width.%]="item.percent"></span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </article>
+
+        <article class="panel">
+            <header>
+                <h2>Top restaurants by team size</h2>
+                <p>Where the most staff are assigned.</p>
+            </header>
+            @if (topRestaurantsByTeam().length === 0) {
+                <div class="empty">No staff assigned yet.</div>
+            } @else {
+                <ul class="rank-list">
+                    @for (item of topRestaurantsByTeam(); track item.restaurant.id; let i = $index) {
+                        <li>
+                            <span class="rank">{{ i + 1 }}</span>
+                            <div class="rank-info">
+                                <strong>{{ item.restaurant.name }}</strong>
+                                @if (item.restaurant.cuisine) {
+                                    <small>{{ item.restaurant.cuisine }}</small>
+                                }
+                            </div>
+                            <span class="rank-value">
+                                {{ item.staffCount }}
+                                <small>members</small>
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+        </article>
+    </section>
+</div>

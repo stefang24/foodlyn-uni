@@ -1,0 +1,338 @@
+<div class="cashier-page">
+    <header class="topbar">
+        <div class="title">
+            <h1>Cashier</h1>
+            <p>Manage orders and tables</p>
+        </div>
+        <a class="new-order-btn" routerLink="/staff-order">
+            <i class="pi pi-plus"></i> New order
+        </a>
+        <nav class="tabs">
+            <button
+                type="button"
+                class="tab"
+                [class.active]="tab() === 'orders'"
+                (click)="setTab('orders')"
+            >
+                <i class="pi pi-list"></i> Orders
+                <span class="badge">{{ activeCount() }}</span>
+            </button>
+            <button
+                type="button"
+                class="tab"
+                [class.active]="tab() === 'awaiting-payment'"
+                (click)="setTab('awaiting-payment')"
+            >
+                <i class="pi pi-wallet"></i> To pay
+                @if (awaitingCount() > 0) {
+                    <span class="badge hot">{{ awaitingCount() }}</span>
+                }
+            </button>
+            <button
+                type="button"
+                class="tab"
+                [class.active]="tab() === 'tables'"
+                (click)="setTab('tables')"
+            >
+                <i class="pi pi-th-large"></i> Tables
+            </button>
+            <button
+                type="button"
+                class="tab"
+                [class.active]="tab() === 'history'"
+                (click)="setTab('history')"
+            >
+                <i class="pi pi-history"></i> History
+            </button>
+            <button
+                type="button"
+                class="tab sound-tab"
+                (click)="sound.toggleMute()"
+                [attr.title]="sound.muted() ? 'Unmute sounds' : 'Mute sounds'"
+            >
+                <i [class]="'pi ' + (sound.muted() ? 'pi-volume-off' : 'pi-volume-up')"></i>
+            </button>
+        </nav>
+    </header>
+
+    @if (tab() === 'orders') {
+        @if (loadingService.isLoading(LOAD_KEY) && orders().length === 0) {
+            <div class="status">
+                <i class="pi pi-spin pi-spinner"></i>
+                <p>Loading orders...</p>
+            </div>
+        } @else if (orders().length === 0) {
+            <div class="status">
+                <i class="pi pi-inbox"></i>
+                <p>No active orders.</p>
+            </div>
+        } @else {
+            <section class="grid">
+                @for (o of orders(); track o.id) {
+                    <article class="order order-clickable" (click)="openDetail(o)">
+                        <header>
+                            <div>
+                                <h3>Order #{{ o.id }}</h3>
+                                <p>
+                                    Table #{{ o.tableNumber }} · Party {{ o.partySize }} ·
+                                    {{ o.createdAt | date: 'shortTime' }}
+                                </p>
+                            </div>
+                            <strong>{{
+                                o.totalAmount | currency: (o.currency ?? 'USD') : 'symbol' : '1.2-2'
+                            }}</strong>
+                        </header>
+
+                        <div class="status-badge" [class]="statusClass(o.status)">
+                            {{ o.status }}
+                        </div>
+
+                        <ul class="items">
+                            @for (i of o.items; track i.id) {
+                                <li>
+                                    <div class="line">
+                                        <span class="qty">{{ i.quantity }}×</span>
+                                        <span class="name">{{ i.name }}</span>
+                                        @if (i.notes) {
+                                            <em class="notes">- {{ i.notes }}</em>
+                                        }
+                                    </div>
+                                    @if (i.modifiers.length > 0) {
+                                        <ul class="mods">
+                                            @for (m of i.modifiers; track m.id) {
+                                                <li>
+                                                    {{ m.groupName }}: {{ m.name }}
+                                                    @if (m.price > 0) { (+{{ m.price | currency }}) }
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                        @if (o.deliveryNotes) {
+                            <p class="order-notes">
+                                <i class="pi pi-info-circle"></i> {{ o.deliveryNotes }}
+                            </p>
+                        }
+                        @if (o.status === 'Placed') {
+                            <div class="actions" (click)="$event.stopPropagation()">
+                                <button type="button" class="btn danger" (click)="openReject(o)">
+                                    <i class="pi pi-times"></i> Reject
+                                </button>
+                                <button type="button" class="btn primary" (click)="approve(o)">
+                                    <i class="pi pi-check"></i> Approve
+                                </button>
+                            </div>
+                        }
+                    </article>
+                }
+            </section>
+        }
+    } @else if (tab() === 'awaiting-payment') {
+        @if (awaitingPayment().length === 0) {
+            <div class="status">
+                <i class="pi pi-check-circle"></i>
+                <p>No cash payments waiting.</p>
+            </div>
+        } @else {
+            <section class="grid">
+                @for (o of awaitingPayment(); track o.id) {
+                    <article class="order order-clickable" (click)="openDetail(o)">
+                        <header>
+                            <div>
+                                <h3>Order #{{ o.id }}</h3>
+                                <p>
+                                    Table #{{ o.tableNumber }} ·
+                                    {{ o.servedAt | date: 'shortTime' }}
+                                </p>
+                            </div>
+                            <strong>{{
+                                o.totalAmount | currency: (o.currency ?? 'USD') : 'symbol' : '1.2-2'
+                            }}</strong>
+                        </header>
+                        <div class="status-badge s-awaitingpayment">Cash to collect</div>
+                        <ul class="items">
+                            @for (i of o.items; track i.id) {
+                                <li>
+                                    <div class="line">
+                                        <span class="qty">{{ i.quantity }}×</span>
+                                        <span class="name">{{ i.name }}</span>
+                                        @if (i.notes) {
+                                            <em class="notes">- {{ i.notes }}</em>
+                                        }
+                                    </div>
+                                    @if (i.modifiers.length > 0) {
+                                        <ul class="mods">
+                                            @for (m of i.modifiers; track m.id) {
+                                                <li>
+                                                    {{ m.groupName }}: {{ m.name }}
+                                                    @if (m.price > 0) { (+{{ m.price | currency }}) }
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                        @if (o.deliveryNotes) {
+                            <p class="order-notes">
+                                <i class="pi pi-info-circle"></i> {{ o.deliveryNotes }}
+                            </p>
+                        }
+                        <div class="actions" (click)="$event.stopPropagation()">
+                            <button type="button" class="btn primary" (click)="markPaid(o)">
+                                <i class="pi pi-check"></i> Mark paid
+                            </button>
+                        </div>
+                    </article>
+                }
+            </section>
+        }
+    } @else if (tab() === 'history') {
+        @if (loadingService.isLoading(HISTORY_KEY) && history().length === 0) {
+            <div class="status">
+                <i class="pi pi-spin pi-spinner"></i>
+                <p>Loading history...</p>
+            </div>
+        } @else if (history().length === 0) {
+            <div class="status">
+                <i class="pi pi-inbox"></i>
+                <p>No completed orders yet.</p>
+            </div>
+        } @else {
+            <section class="grid">
+                @for (o of history(); track o.id) {
+                    <article class="order order-clickable" (click)="openDetail(o)">
+                        <header>
+                            <div>
+                                <h3>Order #{{ o.id }}</h3>
+                                <p>
+                                    Table #{{ o.tableNumber }} ·
+                                    {{ (o.completedAt ?? o.servedAt ?? o.createdAt) | date: 'short' }}
+                                </p>
+                            </div>
+                            <strong>{{
+                                o.totalAmount | currency: (o.currency ?? 'USD') : 'symbol' : '1.2-2'
+                            }}</strong>
+                        </header>
+                        <div class="status-badge" [class]="statusClass(o.status)">
+                            {{ o.status }}@if (o.paymentMethod) { · {{ o.paymentMethod }} }
+                        </div>
+                        <ul class="items">
+                            @for (i of o.items; track i.id) {
+                                <li>
+                                    <div class="line">
+                                        <span class="qty">{{ i.quantity }}×</span>
+                                        <span class="name">{{ i.name }}</span>
+                                        @if (i.notes) {
+                                            <em class="notes">- {{ i.notes }}</em>
+                                        }
+                                    </div>
+                                    @if (i.modifiers.length > 0) {
+                                        <ul class="mods">
+                                            @for (m of i.modifiers; track m.id) {
+                                                <li>
+                                                    {{ m.groupName }}: {{ m.name }}
+                                                    @if (m.price > 0) { (+{{ m.price | currency }}) }
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                        @if (o.deliveryNotes) {
+                            <p class="order-notes">
+                                <i class="pi pi-info-circle"></i> {{ o.deliveryNotes }}
+                            </p>
+                        }
+                    </article>
+                }
+            </section>
+        }
+    } @else if (tab() === 'tables') {
+        @if (loadingService.isLoading(TABLES_KEY) && tables().length === 0) {
+            <div class="status">
+                <i class="pi pi-spin pi-spinner"></i>
+                <p>Loading tables...</p>
+            </div>
+        } @else if (tables().length === 0) {
+            <div class="status">
+                <i class="pi pi-th-large"></i>
+                <p>No tables.</p>
+            </div>
+        } @else {
+            <section class="tables-grid">
+                @for (t of tables(); track t.id) {
+                    <article class="table-card" [class]="tableStateClass(t)">
+                        <div class="num">#{{ t.number }}</div>
+                        @if (t.label) {
+                            <div class="label">{{ t.label }}</div>
+                        }
+                        <div class="state">{{ tableStateLabel(t) }}</div>
+                        <div class="meta">
+                            <span><i class="pi pi-users"></i> {{ t.capacity }}</span>
+                            @if (t.activeOrders > 0) {
+                                <span><i class="pi pi-shopping-cart"></i> {{ t.activeOrders }}</span>
+                            }
+                        </div>
+                        @if (t.status === 'Eating' && t.activeOrders === 0) {
+                            <button
+                                type="button"
+                                class="btn primary clean-btn"
+                                (click)="finishEating(t)"
+                            >
+                                <i class="pi pi-check-circle"></i> Finished eating
+                            </button>
+                        }
+                        @if (t.status === 'Cleaning' && t.activeOrders === 0) {
+                            <button
+                                type="button"
+                                class="btn primary clean-btn"
+                                (click)="markCleaned(t)"
+                            >
+                                <i class="pi pi-check"></i> Mark cleaned
+                            </button>
+                        }
+                    </article>
+                }
+            </section>
+        }
+    }
+</div>
+
+<p-dialog
+    [visible]="rejectOpen()"
+    (visibleChange)="rejectOpen.set($event)"
+    [modal]="true"
+    [dismissableMask]="true"
+    [style]="{ width: '420px' }"
+    header="Reject order"
+>
+    @if (rejectTarget(); as t) {
+        <div class="reject-body">
+            <p>Order #{{ t.id }} - Table #{{ t.tableNumber }}</p>
+            <label for="reject-reason">Reason (optional)</label>
+            <textarea
+                id="reject-reason"
+                rows="3"
+                [(ngModel)]="rejectReason"
+                placeholder="e.g. item out of stock"
+            ></textarea>
+            <div class="reject-actions">
+                <button type="button" class="btn ghost" (click)="closeReject()">Cancel</button>
+                <button type="button" class="btn danger" (click)="confirmReject()">
+                    <i class="pi pi-times"></i> Reject order
+                </button>
+            </div>
+        </div>
+    }
+</p-dialog>
+
+<app-order-detail-dialog
+    [visible]="detailOpen()"
+    [orderId]="detailOrderId()"
+    [orderSeed]="detailSeed()"
+    (close)="closeDetail()"
+/>

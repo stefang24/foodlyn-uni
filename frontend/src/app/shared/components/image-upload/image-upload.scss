@@ -1,0 +1,88 @@
+$primary: rgb(125, 7, 7);
+$primary-dark: rgb(70, 4, 4);
+$text-muted: #64748b;
+$danger: #b91c1c;
+
+:host {
+    display: block;
+}
+
+.image-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    &.square .preview {
+        aspect-ratio: 1 / 1;
+        max-width: 220px;
+    }
+}
+
+.preview {
+    width: 100%;
+    max-width: 320px;
+    aspect-ratio: 16 / 9;
+    border: 1.5px dashed rgba(15, 23, 42, 0.18);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.03);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .placeholder,
+    .loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        color: $text-muted;
+        font-size: 12px;
+
+        i {
+            font-size: 28px;
+        }
+    }
+}
+
+.controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1.5px solid rgba(15, 23, 42, 0.1);
+        background: white;
+        color: #1f1f1f;
+
+        &:hover {
+            border-color: $primary;
+            color: $primary;
+        }
+
+        &.danger:hover {
+            border-color: $danger;
+            color: $danger;
+        }
+
+        &[disabled] {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+}

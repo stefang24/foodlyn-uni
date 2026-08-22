@@ -1,0 +1,316 @@
+$primary: rgb(125, 7, 7);
+$text-dark: #0f172a;
+$text-muted: #64748b;
+
+.orders-page {
+    position: relative;
+    isolation: isolate;
+    padding: 32px 36px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 100%;
+    box-sizing: border-box;
+}
+
+.page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .eyebrow {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        color: #94a3b8;
+    }
+
+    h1 {
+        margin: 4px 0 0;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.4px;
+        color: $text-dark;
+    }
+
+    .sub {
+        margin: 2px 0 0;
+        font-size: 13px;
+        color: $text-muted;
+    }
+}
+
+.summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.sum {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 14px;
+    padding: 14px 16px;
+
+    .sum-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: #94a3b8;
+    }
+
+    .sum-value {
+        margin-top: 4px;
+        font-size: 20px;
+        font-weight: 700;
+        color: $text-dark;
+    }
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 14px;
+    padding: 10px 12px;
+}
+
+.search {
+    position: relative;
+    flex: 1;
+    min-width: 260px;
+
+    i {
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        transform: translateY(-50%);
+        color: $text-muted;
+        font-size: 0.9rem;
+    }
+
+    input {
+        width: 100%;
+        padding: 8px 10px 8px 32px;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 10px;
+        background: white;
+        font-size: 14px;
+        color: $text-dark;
+
+        &:focus {
+            outline: none;
+            border-color: rgba(125, 7, 7, 0.3);
+        }
+    }
+}
+
+.range-chips {
+    display: flex;
+    gap: 4px;
+    background: rgba(15, 23, 42, 0.06);
+    padding: 3px;
+    border-radius: 10px;
+}
+
+.chip {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #334155;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+
+    &.active {
+        background: white;
+        color: $primary;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.1);
+    }
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+}
+
+::ng-deep .table-card {
+    .p-datatable-thead > tr > th {
+        background: #fafafa;
+        color: $text-dark;
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .p-datatable-tbody > tr > td {
+        font-size: 14px;
+        color: $text-dark;
+    }
+
+    .clickable { cursor: pointer; }
+
+    .clickable:hover td { background: rgba(125, 7, 7, 0.04); }
+}
+
+.amount { font-weight: 700; color: $primary; }
+
+.muted { color: $text-muted; }
+
+.status-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+
+    &.st-placed { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+    &.st-approved { background: rgba(59, 130, 246, 0.15); color: #1d4ed8; }
+    &.st-preparing { background: rgba(139, 92, 246, 0.15); color: #6d28d9; }
+    &.st-ready { background: rgba(16, 185, 129, 0.15); color: #047857; }
+    &.st-served { background: rgba(20, 184, 166, 0.15); color: #0f766e; }
+    &.st-awaitingpayment { background: rgba(239, 68, 68, 0.15); color: #b91c1c; }
+    &.st-completed { background: rgba(34, 197, 94, 0.15); color: #166534; }
+    &.st-rejected { background: rgba(239, 68, 68, 0.18); color: #7f1d1d; }
+    &.st-cancelled { background: rgba(100, 116, 139, 0.18); color: #334155; }
+}
+
+.pay-chip {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(15, 23, 42, 0.06);
+    color: #334155;
+
+    &[data-pay='Cash'] { background: rgba(16, 185, 129, 0.14); color: #047857; }
+    &[data-pay='Card'] { background: rgba(59, 130, 246, 0.14); color: #1d4ed8; }
+}
+
+.empty {
+    text-align: center;
+    padding: 30px !important;
+    color: $text-muted;
+}
+
+.detail {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.d-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    align-items: end;
+}
+
+.d-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 14px;
+    padding: 14px;
+    background: rgba(15, 23, 42, 0.03);
+    border-radius: 12px;
+}
+
+.d-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #94a3b8;
+}
+
+.d-val {
+    margin-top: 3px;
+    color: $text-dark;
+    font-size: 14px;
+    font-weight: 600;
+
+    &.big { font-size: 20px; font-weight: 700; }
+    &.accent { color: $primary; }
+}
+
+.d-note {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 10px;
+    padding: 10px 12px;
+
+    p {
+        margin: 4px 0 0;
+        color: #0f172a;
+        font-size: 13px;
+        line-height: 1.4;
+    }
+}
+
+.d-items {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    li {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        padding: 7px 0;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+        font-size: 13px;
+
+        &:last-child { border-bottom: none; }
+
+        .qty {
+            display: inline-block;
+            min-width: 28px;
+            font-weight: 700;
+            color: $primary;
+        }
+
+        .name {
+            flex: 1;
+            color: $text-dark;
+            font-weight: 600;
+        }
+
+        .note {
+            color: $text-muted;
+            font-style: italic;
+            margin-right: 8px;
+        }
+
+        .line-total {
+            font-weight: 700;
+            color: $text-dark;
+        }
+    }
+}

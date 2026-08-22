@@ -1,0 +1,255 @@
+<div class="profile-page">
+    <header class="top">
+        <button type="button" class="back" (click)="back()">
+            <i class="pi pi-arrow-left"></i> Back
+        </button>
+    </header>
+
+    @if (profile(); as p) {
+        <section class="hero">
+            <div class="avatar-wrap">
+                @if (photoUrl(); as ph) {
+                    <img [src]="ph" alt="" class="avatar-img" />
+                } @else {
+                    <div class="avatar-fallback">{{ initials() }}</div>
+                }
+            </div>
+            <div class="hero-text">
+                <h1>{{ fullName() }}</h1>
+                <div class="chip-row">
+                    <span class="chip" [attr.data-role]="p.role">{{ p.role }}</span>
+                    <span class="chip muted">&commat;{{ p.username }}</span>
+                </div>
+                <div class="contact">
+                    <span><i class="pi pi-envelope"></i> {{ p.email }}</span>
+                </div>
+            </div>
+            <div class="hero-actions">
+                @if (isStatusDisplay()) {
+                    <button type="button" class="back-display-btn" (click)="goToStatusDisplay()">
+                        <i class="pi pi-arrow-left"></i> Back to display
+                    </button>
+                }
+                <button type="button" class="logout-btn" (click)="logout()">
+                    <i class="pi pi-sign-out"></i> Sign out
+                </button>
+            </div>
+        </section>
+
+        @if (isCustomer()) {
+            <section class="kpi-row">
+                <article class="kpi">
+                    <div class="kpi-label">Orders</div>
+                    <div class="kpi-value">{{ orderStats().count }}</div>
+                </article>
+                <article class="kpi">
+                    <div class="kpi-label">Completed</div>
+                    <div class="kpi-value">{{ orderStats().completed }}</div>
+                </article>
+                <article class="kpi">
+                    <div class="kpi-label">Total spent</div>
+                    <div class="kpi-value">{{ orderStats().total | currency: 'USD' : 'symbol' : '1.2-2' }}</div>
+                </article>
+            </section>
+        }
+
+        <nav class="tabs">
+            <button type="button" class="tab" [class.active]="tab() === 'profile'" (click)="setTab('profile')">
+                <i class="pi pi-id-card"></i> Profile
+            </button>
+            <button type="button" class="tab" [class.active]="tab() === 'security'" (click)="setTab('security')">
+                <i class="pi pi-lock"></i> Security
+            </button>
+            @if (isCustomer()) {
+                <button type="button" class="tab" [class.active]="tab() === 'orders'" (click)="setTab('orders')">
+                    <i class="pi pi-list"></i> Order history
+                </button>
+            }
+        </nav>
+
+        <section class="card">
+            @if (tab() === 'profile') {
+                <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="form">
+                    <div class="grid">
+                        <div class="field">
+                            <label>First name</label>
+                            <input pInputText type="text" formControlName="firstName" />
+                        </div>
+                        <div class="field">
+                            <label>Last name</label>
+                            <input pInputText type="text" formControlName="lastName" />
+                        </div>
+                        <div class="field">
+                            <label>Username *</label>
+                            <input pInputText type="text" formControlName="username"
+                                [class.ng-invalid]="isInvalid(profileForm, 'username')"
+                                [class.ng-dirty]="isInvalid(profileForm, 'username')" />
+                            @if (isInvalid(profileForm, 'username')) {
+                                <small class="error">{{ getErrorMessage(profileForm, 'username') }}</small>
+                            }
+                        </div>
+                        <div class="field">
+                            <label>Email</label>
+                            <input pInputText type="email" formControlName="email" readonly />
+                            <small class="muted">Contact an administrator to change your email.</small>
+                        </div>
+                        <div class="field span-2">
+                            <label>Profile picture</label>
+                            <app-image-upload formControlName="profilePictureUrl" folder="users" aspect="square" />
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button type="submit" class="btn primary" [disabled]="profileForm.invalid || loadingService.isLoading(SAVE_KEY)">
+                            @if (loadingService.isLoading(SAVE_KEY)) {
+                                <i class="pi pi-spin pi-spinner"></i>
+                            } @else {
+                                Save profile
+                            }
+                        </button>
+                    </div>
+                </form>
+            }
+
+            @if (tab() === 'security') {
+                <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="form">
+                    <div class="grid">
+                        <div class="field span-2">
+                            <label>Current password *</label>
+                            <p-password
+                                formControlName="currentPassword"
+                                [feedback]="false"
+                                [toggleMask]="true"
+                                [fluid]="true"
+                            />
+                        </div>
+                        <div class="field">
+                            <label>New password *</label>
+                            <p-password
+                                formControlName="newPassword"
+                                [toggleMask]="true"
+                                [fluid]="true"
+                            />
+                        </div>
+                        <div class="field">
+                            <label>Confirm new password *</label>
+                            <p-password
+                                formControlName="confirmPassword"
+                                [feedback]="false"
+                                [toggleMask]="true"
+                                [fluid]="true"
+                            />
+                            @if (showMismatch()) {
+                                <small class="error">Passwords do not match</small>
+                            }
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button type="submit" class="btn primary" [disabled]="passwordForm.invalid || loadingService.isLoading(PWD_KEY)">
+                            @if (loadingService.isLoading(PWD_KEY)) {
+                                <i class="pi pi-spin pi-spinner"></i>
+                            } @else {
+                                Update password
+                            }
+                        </button>
+                    </div>
+                </form>
+            }
+
+            @if (tab() === 'orders' && isCustomer()) {
+                @if (orders().length === 0) {
+                    <div class="state">
+                        <i class="pi pi-inbox"></i>
+                        <p>You haven't placed any orders yet.</p>
+                    </div>
+                } @else {
+                    <div class="orders-grid">
+                        @for (o of orders(); track o.id) {
+                            <article class="order-card" [attr.data-status]="o.status" (click)="openOrderDetail(o)">
+                                <div class="oc-cover" [style.background-image]="restaurantById(o.restaurantId)?.coverImageUrl ? 'url(' + restaurantById(o.restaurantId)!.coverImageUrl + ')' : null">
+                                    @if (!restaurantById(o.restaurantId)?.coverImageUrl) {
+                                        <i class="pi pi-shop"></i>
+                                    }
+                                    <span [class]="'st-pill ' + statusClass(o.status)">{{ o.status }}</span>
+                                </div>
+                                <div class="oc-body">
+                                    <div class="oc-head">
+                                        <div>
+                                            <h3>{{ restaurantName(o.restaurantId) }}</h3>
+                                            <div class="oc-sub">Order #{{ o.id }} · Table {{ o.tableNumber }}</div>
+                                        </div>
+                                        <div class="oc-tot">{{ o.totalAmount | currency: (o.currency ?? 'USD') : 'symbol' : '1.2-2' }}</div>
+                                    </div>
+                                    <ul class="oc-items">
+                                        @for (i of o.items.slice(0, 3); track i.id) {
+                                            <li><span class="qty">{{ i.quantity }}×</span> {{ i.name }}</li>
+                                        }
+                                        @if (o.items.length > 3) {
+                                            <li class="more">+ {{ o.items.length - 3 }} more</li>
+                                        }
+                                    </ul>
+                                    <footer class="oc-foot">
+                                        <span><i class="pi pi-clock"></i> {{ o.createdAt | date: 'short' }}</span>
+                                        <button type="button" class="oc-link" (click)="openOrderRestaurant(o, $event)">
+                                            View restaurant <i class="pi pi-arrow-right"></i>
+                                        </button>
+                                    </footer>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            }
+        </section>
+    }
+</div>
+
+<p-dialog
+    [visible]="orderDetailOpen()"
+    (visibleChange)="$event ? orderDetailOpen.set(true) : closeOrderDetail()"
+    [modal]="true"
+    [dismissableMask]="true"
+    [style]="{ width: '560px' }"
+    header="Order details"
+>
+    @if (orderDetail(); as o) {
+        <div class="detail">
+            <div class="d-row">
+                <div>
+                    <div class="d-label">Restaurant</div>
+                    <div class="d-val big">{{ restaurantName(o.restaurantId) }}</div>
+                </div>
+                <span [class]="'st-pill ' + statusClass(o.status)">{{ o.status }}</span>
+            </div>
+            <div class="d-grid">
+                <div><div class="d-label">Order</div><div class="d-val">#{{ o.id }}</div></div>
+                <div><div class="d-label">Table</div><div class="d-val">{{ o.tableNumber }}</div></div>
+                <div><div class="d-label">Party</div><div class="d-val">{{ o.partySize }}</div></div>
+                <div><div class="d-label">Total</div><div class="d-val accent">{{ o.totalAmount | currency: (o.currency ?? 'USD') : 'symbol' : '1.2-2' }}</div></div>
+                <div><div class="d-label">Payment</div><div class="d-val">{{ o.paymentMethod || '-' }}</div></div>
+                <div><div class="d-label">Placed</div><div class="d-val">{{ o.createdAt | date: 'short' }}</div></div>
+                @if (o.completedAt) {
+                    <div><div class="d-label">Completed</div><div class="d-val">{{ o.completedAt | date: 'short' }}</div></div>
+                }
+            </div>
+            @if (o.deliveryNotes) {
+                <div class="d-note">
+                    <div class="d-label">Notes</div>
+                    <p>{{ o.deliveryNotes }}</p>
+                </div>
+            }
+            <div>
+                <div class="d-label">Items</div>
+                <ul class="d-items">
+                    @for (i of o.items; track i.id) {
+                        <li>
+                            <span class="qty">{{ i.quantity }}×</span>
+                            <span class="name">{{ i.name }}</span>
+                            @if (i.notes) { <span class="note">- {{ i.notes }}</span> }
+                            <span class="line">{{ i.price * i.quantity | currency: (o.currency ?? 'USD') : 'symbol' : '1.2-2' }}</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+</p-dialog>

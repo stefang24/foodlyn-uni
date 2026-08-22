@@ -1,0 +1,129 @@
+<div class="admin-live">
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">LIVE ORDERS</p>
+            <h1>Platform-wide live orders</h1>
+            <p class="sub">All active orders across every restaurant.</p>
+        </div>
+        <div class="filters">
+            <div class="search">
+                <i class="pi pi-search"></i>
+                <input
+                    type="text"
+                    placeholder="Search id, restaurant, item, customer"
+                    [ngModel]="query()"
+                    (ngModelChange)="query.set($event)"
+                />
+                @if (query()) {
+                    <button type="button" class="clear" (click)="query.set('')" aria-label="Clear">
+                        <i class="pi pi-times"></i>
+                    </button>
+                }
+            </div>
+            <p-select
+                [options]="currencyOptions()"
+                [ngModel]="displayCurrency()"
+                (ngModelChange)="setDisplayCurrency($event)"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+                placeholder="Currency"
+            />
+            <p-select
+                [options]="restaurantOptions()"
+                [ngModel]="filterRestaurantId()"
+                (ngModelChange)="filterRestaurantId.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+                placeholder="Restaurant"
+            />
+            <p-select
+                [options]="statusOptions"
+                [ngModel]="filterStatus()"
+                (ngModelChange)="filterStatus.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+                placeholder="Status"
+            />
+        </div>
+    </section>
+
+    <section class="stats">
+        <article class="stat">
+            <div class="k">{{ totals().count }}</div>
+            <div class="l">Active orders</div>
+        </article>
+        <article class="stat">
+            <div class="k">{{ totals().value | currency: displayCurrency() : 'symbol' : '1.2-2' }}</div>
+            <div class="l">In-flight value</div>
+        </article>
+        <article class="stat">
+            <div class="k">{{ totals().restaurants }}</div>
+            <div class="l">Restaurants serving</div>
+        </article>
+        <article class="stat">
+            <div class="k">{{ totals().byStatus['Placed'] || 0 }}</div>
+            <div class="l">Pending approval</div>
+        </article>
+        <article class="stat">
+            <div class="k">{{ totals().byStatus['Preparing'] || 0 }}</div>
+            <div class="l">In kitchen</div>
+        </article>
+        <article class="stat">
+            <div class="k">{{ totals().byStatus['AwaitingPayment'] || 0 }}</div>
+            <div class="l">Awaiting payment</div>
+        </article>
+    </section>
+
+    @if (loading()) {
+        <div class="state"><i class="pi pi-spin pi-spinner"></i><p>Loading...</p></div>
+    } @else if (filtered().length === 0) {
+        <div class="state"><i class="pi pi-inbox"></i><p>No active orders match the filter.</p></div>
+    } @else {
+        <section class="grid">
+            @for (o of filtered(); track o.id) {
+                <article class="order order-clickable" [attr.data-status]="o.status" (click)="openDetail(o)">
+                    <header>
+                        <div>
+                            <div class="oid">#{{ o.id }}</div>
+                            <div class="ometa">
+                                {{ restaurantName(o.restaurantId) }} · Table {{ o.tableNumber }} · Party {{ o.partySize }}
+                            </div>
+                        </div>
+                        <div class="otot">{{ convertedTotal(o) | currency: displayCurrency() : 'symbol' : '1.2-2' }}</div>
+                    </header>
+
+                    <div class="status-row">
+                        <span [class]="'status-pill ' + statusClass(o.status)">{{ o.status }}</span>
+                        @if (o.customerName) {
+                            <span class="cust"><i class="pi pi-user"></i> {{ o.customerName }}</span>
+                        }
+                    </div>
+
+                    <ul class="items">
+                        @for (i of o.items; track i.id) {
+                            <li>
+                                <span class="qty">{{ i.quantity }}×</span>
+                                {{ i.name }}
+                            </li>
+                        }
+                    </ul>
+
+                    <footer>
+                        <span class="time"><i class="pi pi-clock"></i> {{ o.createdAt | date: 'shortTime' }}</span>
+                        @if (o.paymentMethod) { <span class="pay">{{ o.paymentMethod }}</span> }
+                    </footer>
+                </article>
+            }
+        </section>
+    }
+</div>
+
+<app-order-detail-dialog
+    [visible]="detailOpen()"
+    [orderId]="detailOrderId()"
+    [orderSeed]="detailSeed()"
+    (close)="closeDetail()"
+/>

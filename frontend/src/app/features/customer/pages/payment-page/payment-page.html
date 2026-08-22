@@ -1,0 +1,172 @@
+@if (session(); as s) {
+    <div class="pay-page">
+        <header class="topbar">
+            <button type="button" class="icon-btn" (click)="back()">
+                <i class="pi pi-arrow-left"></i>
+            </button>
+            <div class="title">
+                <h1>Payment</h1>
+                <p>{{ s.restaurantName }} · Table #{{ s.tableNumber }}</p>
+            </div>
+        </header>
+
+        <section class="summary-card">
+            <div class="line">
+                <span>Items</span>
+                <strong>{{ tableSession.cartCount() }}</strong>
+            </div>
+            <div class="line">
+                <span>Party size</span>
+                <strong>{{ partySize() ?? 1 }}</strong>
+            </div>
+            <div class="line total">
+                <span>Total</span>
+                <strong>
+                    {{ tableSession.cartTotal() | currency: (currency() ?? 'USD') : 'symbol' : '1.2-2' }}
+                </strong>
+            </div>
+        </section>
+
+        <section class="methods">
+            <h2>Payment method</h2>
+            <div class="method-grid">
+                <button
+                    type="button"
+                    class="method"
+                    [class.active]="method() === 'card'"
+                    (click)="pick('card')"
+                >
+                    <i class="pi pi-credit-card"></i>
+                    <span>Card</span>
+                    <small>Pay at checkout</small>
+                </button>
+                <button
+                    type="button"
+                    class="method"
+                    [class.active]="method() === 'cash'"
+                    (click)="pick('cash')"
+                >
+                    <i class="pi pi-money-bill"></i>
+                    <span>Cash</span>
+                    <small>Pay the waiter</small>
+                </button>
+            </div>
+            <p class="hint">
+                <i class="pi pi-info-circle"></i>
+                Payment processing is not yet enabled. Your order will be sent to the kitchen and
+                paid on-site.
+            </p>
+
+            @if (method() === 'card') {
+                <form class="card-form" [formGroup]="cardForm">
+                    <div class="card-preview">
+                        <div class="card-brand">
+                            <i class="pi pi-credit-card"></i>
+                            <span>DEMO</span>
+                        </div>
+                        <div class="card-number-preview">{{ cardMaskedPreview() }}</div>
+                        <div class="card-bottom">
+                            <div>
+                                <div class="card-label">Cardholder</div>
+                                <div class="card-value">{{ cardHolderRaw() || 'YOUR NAME' }}</div>
+                            </div>
+                            <div>
+                                <div class="card-label">Expires</div>
+                                <div class="card-value">{{ cardExpiryRaw() || 'MM/YY' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-fields">
+                        <div class="field span-2">
+                            <label for="card-number">Card number</label>
+                            <input
+                                pInputText
+                                id="card-number"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="cc-number"
+                                placeholder="1234 5678 9012 3456"
+                                formControlName="cardNumber"
+                                (input)="onCardNumberInput($any($event.target).value)"
+                                [class.ng-invalid]="isCardInvalid('cardNumber')"
+                                [class.ng-dirty]="isCardInvalid('cardNumber')"
+                            />
+                            @if (isCardInvalid('cardNumber')) {
+                                <small class="error">Enter all 16 digits.</small>
+                            }
+                        </div>
+                        <div class="field span-2">
+                            <label for="card-holder">Cardholder name</label>
+                            <input
+                                pInputText
+                                id="card-holder"
+                                type="text"
+                                autocomplete="cc-name"
+                                placeholder="JOHN DOE"
+                                formControlName="cardHolder"
+                                (input)="onCardHolderInput($any($event.target).value)"
+                                [class.ng-invalid]="isCardInvalid('cardHolder')"
+                                [class.ng-dirty]="isCardInvalid('cardHolder')"
+                            />
+                            @if (isCardInvalid('cardHolder')) {
+                                <small class="error">Name is required.</small>
+                            }
+                        </div>
+                        <div class="field">
+                            <label for="card-expiry">Expires (MM/YY)</label>
+                            <input
+                                pInputText
+                                id="card-expiry"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="cc-exp"
+                                placeholder="MM/YY"
+                                formControlName="expiry"
+                                (input)="onExpiryInput($any($event.target).value)"
+                                [class.ng-invalid]="isCardInvalid('expiry')"
+                                [class.ng-dirty]="isCardInvalid('expiry')"
+                            />
+                            @if (isCardInvalid('expiry')) {
+                                <small class="error">Use format MM/YY.</small>
+                            }
+                        </div>
+                        <div class="field">
+                            <label for="card-cvc">CVC</label>
+                            <input
+                                pInputText
+                                id="card-cvc"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="cc-csc"
+                                placeholder="123"
+                                formControlName="cvc"
+                                (input)="onCvcInput($any($event.target).value)"
+                                [class.ng-invalid]="isCardInvalid('cvc')"
+                                [class.ng-dirty]="isCardInvalid('cvc')"
+                            />
+                            @if (isCardInvalid('cvc')) {
+                                <small class="error">3-digit code.</small>
+                            }
+                        </div>
+                    </div>
+                </form>
+            }
+        </section>
+
+        <footer class="bottom">
+            <button
+                type="button"
+                class="btn primary"
+                (click)="proceed()"
+                [disabled]="loadingService.isLoading(LOAD_KEY)"
+            >
+                @if (loadingService.isLoading(LOAD_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i> Sending...
+                } @else {
+                    <i class="pi pi-check"></i> Proceed
+                }
+            </button>
+        </footer>
+    </div>
+}

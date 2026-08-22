@@ -1,0 +1,225 @@
+$primary: rgb(125, 7, 7);
+$text-dark: #0f172a;
+$text-muted: #64748b;
+
+.live-page {
+    position: relative;
+    isolation: isolate;
+    padding: 32px 32px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-height: 100%;
+    box-sizing: border-box;
+}
+
+.page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .eyebrow {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        color: #94a3b8;
+    }
+
+    h1 {
+        margin: 4px 0 0;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.4px;
+        color: $text-dark;
+    }
+
+    .sub {
+        margin: 2px 0 0;
+        font-size: 13px;
+        color: $text-muted;
+    }
+}
+
+.state {
+    padding: 60px;
+    text-align: center;
+    color: $text-muted;
+
+    i { font-size: 1.8rem; display: block; margin-bottom: 10px; }
+}
+
+.columns {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(220px, 1fr));
+    gap: 12px;
+    overflow-x: auto;
+}
+
+@media (max-width: 1400px) {
+    .columns {
+        grid-template-columns: repeat(3, minmax(240px, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .columns {
+        grid-template-columns: repeat(2, minmax(240px, 1fr));
+    }
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 14px;
+    overflow: hidden;
+    min-height: 200px;
+}
+
+.col-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    background: rgba(15, 23, 42, 0.02);
+
+    i { color: $primary; }
+
+    .col-title {
+        flex: 1;
+        font-weight: 700;
+        font-size: 13px;
+        color: $text-dark;
+    }
+
+    .col-count {
+        background: rgba(15, 23, 42, 0.08);
+        color: #334155;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+}
+
+.col-body {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+.col-empty {
+    color: #cbd5e1;
+    text-align: center;
+    padding: 20px 0;
+    font-size: 13px;
+}
+
+.order-card {
+    background: white;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 13px;
+
+    &.order-clickable {
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+        &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+        }
+    }
+
+    &[data-status='Placed'] { border-left: 3px solid #f59e0b; }
+    &[data-status='Approved'] { border-left: 3px solid #3b82f6; }
+    &[data-status='Preparing'] { border-left: 3px solid #8b5cf6; }
+    &[data-status='Ready'] { border-left: 3px solid #10b981; }
+    &[data-status='Served'] { border-left: 3px solid #14b8a6; }
+    &[data-status='AwaitingPayment'] { border-left: 3px solid #ef4444; }
+}
+
+.oc-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.oc-id {
+    font-weight: 700;
+    color: $text-dark;
+}
+
+.oc-table {
+    font-size: 11px;
+    color: $text-muted;
+    margin-top: 2px;
+}
+
+.oc-total {
+    font-weight: 700;
+    color: $primary;
+}
+
+.oc-customer {
+    font-size: 12px;
+    color: #334155;
+    margin: 6px 0 0;
+
+    i { margin-right: 4px; color: $text-muted; }
+}
+
+.oc-items {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    li {
+        font-size: 12px;
+        color: #334155;
+
+        .qty {
+            display: inline-block;
+            min-width: 22px;
+            font-weight: 700;
+            color: $primary;
+        }
+    }
+}
+
+.oc-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 11px;
+    color: $text-muted;
+
+    .oc-time i { margin-right: 4px; }
+
+    .oc-pay {
+        background: rgba(15, 23, 42, 0.05);
+        padding: 1px 7px;
+        border-radius: 6px;
+        color: #334155;
+    }
+}

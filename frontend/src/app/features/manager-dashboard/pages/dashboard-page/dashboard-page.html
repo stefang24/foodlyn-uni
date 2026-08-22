@@ -1,0 +1,193 @@
+<div class="dashboard">
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">OVERVIEW</p>
+            <h1>{{ headerTitle() }}</h1>
+        </div>
+        <div class="header-actions">
+            <a class="new-order-btn" routerLink="/staff-order">
+                <i class="pi pi-plus"></i> New order
+            </a>
+            <p-select
+                [options]="currencyOptions()"
+                [ngModel]="displayCurrency()"
+                (ngModelChange)="setDisplayCurrency($event)"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Currency"
+                appendTo="body"
+            />
+            <p-select
+                [options]="restaurantOptions()"
+                [ngModel]="selectedRestaurantId()"
+                (ngModelChange)="onRestaurantChange($event)"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="All restaurants"
+                appendTo="body"
+            />
+        </div>
+    </section>
+
+    <section class="period-bar">
+        <div class="range-tabs">
+            @for (r of rangeOptions; track r.value) {
+                <button
+                    type="button"
+                    class="range-tab"
+                    [class.active]="range() === r.value"
+                    (click)="onRangeChange(r.value)"
+                >
+                    {{ r.label }}
+                </button>
+            }
+        </div>
+
+        @if (range() === 'Month' || range() === 'Year') {
+            <div class="range-pickers">
+                @if (range() === 'Month') {
+                    <p-select
+                        [options]="monthOptions"
+                        [ngModel]="selectedMonth()"
+                        (ngModelChange)="onMonthChange($event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Month"
+                        appendTo="body"
+                    />
+                }
+                <p-select
+                    [options]="yearOptions()"
+                    [ngModel]="selectedYear()"
+                    (ngModelChange)="onYearChange($event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Year"
+                    appendTo="body"
+                />
+            </div>
+        }
+    </section>
+
+    <section class="hero-tiles">
+        <article class="tile dark">
+            <div class="tile-icon"><i class="pi pi-box"></i></div>
+            <div class="tile-value">{{ periodTotalOrders() }}</div>
+            <div class="tile-label">Orders · {{ periodLabel() }}</div>
+            <svg class="tile-wave" viewBox="0 0 120 24" preserveAspectRatio="none">
+                <path d="M0,16 C20,4 40,22 60,12 C80,4 100,20 120,10 L120,24 L0,24 Z" />
+            </svg>
+        </article>
+
+        <article class="tile green">
+            <div class="tile-icon"><i class="pi pi-dollar"></i></div>
+            <div class="tile-value">{{ displaySymbol() }}{{ periodRevenue() | number: '1.0-0' }}</div>
+            <div class="tile-label">Revenue · {{ periodLabel() }}</div>
+            <svg class="tile-wave" viewBox="0 0 120 24" preserveAspectRatio="none">
+                <path d="M0,14 C15,6 35,22 55,10 C75,2 95,18 120,8 L120,24 L0,24 Z" />
+            </svg>
+        </article>
+
+        <article class="tile darker">
+            <div class="tile-icon"><i class="pi pi-users"></i></div>
+            <div class="tile-value">{{ occupiedTables() }}/{{ totalTables() }}</div>
+            <div class="tile-label">Tables · occupied</div>
+        </article>
+
+        <article class="tile feedback">
+            <div class="tile-icon"><i class="pi pi-thumbs-up"></i></div>
+            <div class="tile-value">{{ awaitingPaymentCount() }}</div>
+            <div class="tile-label">Awaiting payment</div>
+        </article>
+    </section>
+
+    <section class="main-grid">
+        <article class="card chart-card">
+            <header>
+                <div>
+                    <h2>{{ chartTitle() }}</h2>
+                    <p class="sub">Total: <strong>{{ displaySymbol() }}{{ periodRevenue() | number: '1.2-2' }}</strong></p>
+                </div>
+                <span class="pill">Completed</span>
+            </header>
+
+            <div class="chart-area">
+                @if (chartBars().length > 0) {
+                    <div class="y-axis">
+                        @for (t of yTicks(); track $index) {
+                            <span class="y-tick">{{ t.label }}</span>
+                        }
+                    </div>
+                }
+                <div class="chart-content">
+                    @if (chartBars().length > 0) {
+                        <div class="gridlines">
+                            @for (t of yTicks(); track $index) {
+                                <div class="gridline"></div>
+                            }
+                        </div>
+                    }
+                    <div class="bars">
+                        @for (b of chartBars(); track b.label) {
+                            <div class="bar-wrap" [title]="b.label + ' · ' + displaySymbol() + b.revenue.toFixed(2)">
+                                <div class="bar-col">
+                                    <div
+                                        class="bar"
+                                        [style.height.%]="barHeightPercent(b.revenue)"
+                                    ></div>
+                                </div>
+                                <div class="bar-label">{{ b.label }}</div>
+                            </div>
+                        }
+                        @if (chartBars().length === 0) {
+                            <p class="empty-bars">No data for this period.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="card side">
+            <header><h2>Most sold foods</h2></header>
+            <ul class="ranked">
+                @if (mostSold().length === 0) {
+                    <li class="empty">No sales yet.</li>
+                }
+                @for (m of mostSold(); track m.name; let i = $index) {
+                    <li>
+                        <span class="rank">#{{ i + 1 }}</span>
+                        <span class="name">{{ m.name }}</span>
+                        <span class="count">{{ m.count }}</span>
+                    </li>
+                }
+            </ul>
+        </article>
+    </section>
+
+    <section class="secondary-grid">
+        <article class="kpi">
+            <div class="kpi-label">Period revenue</div>
+            <div class="kpi-value">{{ displaySymbol() }}{{ periodRevenue() | number: '1.2-2' }}</div>
+        </article>
+        <article class="kpi">
+            <div class="kpi-label">Orders completed</div>
+            <div class="kpi-value">{{ periodTotalOrders() }}</div>
+        </article>
+        <article class="kpi">
+            <div class="kpi-label">Average order value</div>
+            <div class="kpi-value">{{ displaySymbol() }}{{ periodAvgOrder() | number: '1.2-2' }}</div>
+        </article>
+        <article class="kpi">
+            <div class="kpi-label">Active orders now</div>
+            <div class="kpi-value">{{ activeOrdersCount() }}</div>
+        </article>
+        <article class="kpi">
+            <div class="kpi-label">Tables cleaning</div>
+            <div class="kpi-value">{{ cleaningTables() }}</div>
+        </article>
+        <article class="kpi">
+            <div class="kpi-label">My restaurants</div>
+            <div class="kpi-value">{{ restaurants().length }}</div>
+        </article>
+    </section>
+</div>

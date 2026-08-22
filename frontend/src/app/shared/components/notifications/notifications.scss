@@ -1,0 +1,124 @@
+$primary: rgb(125, 7, 7);
+$primary-dark: rgb(70, 4, 4);
+$success: #10b981;
+$success-dark: #047857;
+$error: #ef4444;
+$error-dark: #b91c1c;
+$warn: #f59e0b;
+$warn-dark: #b45309;
+$info: #3b82f6;
+$info-dark: #1d4ed8;
+$text-dark: #0f172a;
+$text-muted: #475569;
+
+.notify-stack {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+    max-width: 440px;
+}
+
+.notify-card {
+    pointer-events: auto;
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 16px 16px 16px 18px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: saturate(180%) blur(18px);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow:
+        0 8px 24px rgba(15, 23, 42, 0.12),
+        0 1px 0 rgba(255, 255, 255, 0.6) inset;
+    color: $text-dark;
+    animation: notify-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.05);
+
+    &.sev-success {
+        border-left: 3px solid $success;
+        .notify-icon { color: $success-dark; }
+    }
+    &.sev-error {
+        border-left: 3px solid $error;
+        .notify-icon { color: $error-dark; }
+    }
+    &.sev-warn {
+        border-left: 3px solid $warn;
+        .notify-icon { color: $warn-dark; }
+    }
+    &.sev-info {
+        border-left: 3px solid $info;
+        .notify-icon { color: $info-dark; }
+    }
+}
+
+.notify-icon {
+    margin-top: 2px;
+    font-size: 18px;
+}
+
+.notify-body {
+    min-width: 0;
+}
+
+.notify-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: $text-dark;
+    line-height: 1.25;
+}
+
+.notify-detail {
+    margin-top: 2px;
+    font-size: 12.5px;
+    color: $text-muted;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.notify-close {
+    border: none;
+    background: transparent;
+    color: $text-muted;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+        background: rgba(15, 23, 42, 0.08);
+        color: $text-dark;
+    }
+}
+
+@keyframes notify-in {
+    from {
+        opacity: 0;
+        transform: translateX(20px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@media (max-width: 540px) {
+    .notify-stack {
+        top: 12px;
+        right: 12px;
+        left: 12px;
+        max-width: none;
+    }
+}

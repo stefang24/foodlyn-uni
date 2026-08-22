@@ -1,0 +1,134 @@
+<p-dialog
+    [visible]="visible()"
+    (visibleChange)="onVisibleChange($event)"
+    [modal]="true"
+    [dismissableMask]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{
+        width: '720px',
+        maxWidth: '95vw',
+        maxHeight: 'calc(100vh - 140px)'
+    }"
+    [contentStyle]="{ overflowY: 'auto' }"
+    [maskStyle]="{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        paddingTop: '84px'
+    }"
+    [header]="order() ? 'Order #' + order()!.id : 'Order'"
+>
+    @if (loading() && !order()) {
+        <div class="od-loading">
+            <i class="pi pi-spin pi-spinner"></i>
+            <span>Loading order...</span>
+        </div>
+    } @else if (order(); as o) {
+        <div class="od-body">
+            <section class="od-meta">
+                <span class="od-status" [class]="statusClass()">{{ o.status }}</span>
+                <div class="od-meta-grid">
+                    <div class="meta">
+                        <div class="meta-label">Table</div>
+                        <div class="meta-value">
+                            #{{ o.tableNumber }}
+                            @if (o.tableLabel) { <small>· {{ o.tableLabel }}</small> }
+                        </div>
+                    </div>
+                    <div class="meta">
+                        <div class="meta-label">Placed by</div>
+                        <div class="meta-value">{{ placedByLabel() }}</div>
+                    </div>
+                    <div class="meta">
+                        <div class="meta-label">Party size</div>
+                        <div class="meta-value">{{ o.partySize }}</div>
+                    </div>
+                    <div class="meta">
+                        <div class="meta-label">Created</div>
+                        <div class="meta-value">{{ o.createdAt | date: 'short' }}</div>
+                    </div>
+                    @if (o.paymentMethod) {
+                        <div class="meta">
+                            <div class="meta-label">Payment</div>
+                            <div class="meta-value">{{ o.paymentMethod }}</div>
+                        </div>
+                    }
+                    @if (o.prepTimeMinutes != null) {
+                        <div class="meta">
+                            <div class="meta-label">Prep time</div>
+                            <div class="meta-value">{{ o.prepTimeMinutes }} min</div>
+                        </div>
+                    }
+                </div>
+
+                @if (o.deliveryNotes) {
+                    <div class="od-notes">
+                        <i class="pi pi-info-circle"></i>
+                        <span>{{ o.deliveryNotes }}</span>
+                    </div>
+                }
+            </section>
+
+            <section class="od-items">
+                <h3>Items</h3>
+                <ul class="item-list">
+                    @for (v of itemViews(); track v.item.id) {
+                        <li class="item-row">
+                            <div class="thumb" [class.empty]="!v.imageUrl">
+                                @if (v.imageUrl) {
+                                    <img [src]="v.imageUrl | imageUrl" alt="" />
+                                } @else {
+                                    <i class="pi pi-image"></i>
+                                }
+                            </div>
+                            <div class="item-body">
+                                <div class="item-head">
+                                    <span class="qty">{{ v.item.quantity }}×</span>
+                                    <span class="name">{{ v.item.name }}</span>
+                                    <span class="price">
+                                        {{ v.lineTotal | currency: (o.currency || 'USD') : 'symbol' : '1.2-2' }}
+                                    </span>
+                                </div>
+                                @if (v.groupedModifiers.length > 0) {
+                                    <div class="mod-groups">
+                                        @for (g of v.groupedModifiers; track g.groupName) {
+                                            <div class="mod-group">
+                                                <div class="mod-group-name">{{ g.groupName }}</div>
+                                                <ul class="mod-list">
+                                                    @for (m of g.mods; track m.name) {
+                                                        <li>
+                                                            <span>{{ m.name }}</span>
+                                                            @if (m.price) {
+                                                                <span class="mod-price">
+                                                                    +{{ m.price | currency: (o.currency || 'USD') : 'symbol' : '1.2-2' }}
+                                                                </span>
+                                                            }
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                @if (v.item.notes) {
+                                    <div class="item-notes">
+                                        <i class="pi pi-pencil"></i>
+                                        <span>{{ v.item.notes }}</span>
+                                    </div>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </section>
+
+            <section class="od-totals">
+                <div class="row total">
+                    <span>Total</span>
+                    <strong>{{ o.totalAmount | currency: (o.currency || 'USD') : 'symbol' : '1.2-2' }}</strong>
+                </div>
+            </section>
+        </div>
+    }
+</p-dialog>

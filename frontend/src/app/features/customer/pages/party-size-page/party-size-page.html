@@ -1,0 +1,43 @@
+<div class="wrapper">
+    <div class="panel">
+        <img src="assets/images/foodlyn.png" alt="Foodlyn" class="logo" />
+
+        @if (session(); as s) {
+            <div class="head">
+                <h1>How many of you?</h1>
+                <p class="muted">Table #{{ s.tableNumber }} at {{ s.restaurantName }}</p>
+            </div>
+
+            <div class="quick-grid">
+                @for (n of [1, 2, 3, 4, 5, 6]; track n) {
+                    <button
+                        type="button"
+                        class="chip"
+                        [class.active]="size() === n"
+                        (click)="pick(n)"
+                    >
+                        {{ n }}
+                    </button>
+                }
+            </div>
+
+            <div class="custom">
+                <span class="label">Custom</span>
+                <div class="stepper">
+                    <button type="button" class="step" (click)="dec()" aria-label="decrease">
+                        <i class="pi pi-minus"></i>
+                    </button>
+                    <span class="value">{{ size() }}</span>
+                    <button type="button" class="step" (click)="inc()" aria-label="increase">
+                        <i class="pi pi-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="button" class="btn primary" (click)="proceed()">
+                <i class="pi pi-arrow-right"></i>
+                <span>Continue</span>
+            </button>
+        }
+    </div>
+</div>

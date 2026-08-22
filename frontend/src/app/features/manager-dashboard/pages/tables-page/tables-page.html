@@ -1,0 +1,289 @@
+<p-confirmdialog />
+
+<div class="tables-mgmt">
+    <section class="page-header">
+        <div>
+            <h1>Tables</h1>
+            <p>Manage tables, capacities, and QR codes for guest ordering.</p>
+        </div>
+    </section>
+
+    <section class="card picker">
+        <div class="picker-row">
+            <div class="picker-field">
+                <label for="restaurant-select">Restaurant</label>
+                <p-select
+                    id="restaurant-select"
+                    [options]="restaurantOptions()"
+                    optionLabel="label"
+                    optionValue="value"
+                    [ngModel]="selectedRestaurantId()"
+                    (ngModelChange)="onRestaurantChange($event)"
+                    placeholder="Select restaurant"
+                    appendTo="body"
+                />
+            </div>
+
+            <div class="picker-actions">
+                <button
+                    type="button"
+                    class="btn ghost"
+                    (click)="printQrLabels()"
+                    [disabled]="selectedRestaurantId() == null || !canPrintLabels()"
+                    title="Print QR labels for all active tables"
+                >
+                    <i class="pi pi-print"></i> Print labels
+                </button>
+                <button
+                    type="button"
+                    class="btn"
+                    [class.primary]="editMode()"
+                    [class.ghost]="!editMode()"
+                    (click)="toggleEditMode()"
+                    [disabled]="selectedRestaurantId() == null"
+                >
+                    <i class="pi" [class.pi-lock-open]="editMode()" [class.pi-lock]="!editMode()"></i>
+                    Edit mode: {{ editMode() ? 'ON' : 'OFF' }}
+                </button>
+                @if (editMode()) {
+                    <button
+                        type="button"
+                        class="btn ghost"
+                        (click)="openBulk()"
+                        [disabled]="selectedRestaurantId() == null"
+                    >
+                        <i class="pi pi-list"></i> Bulk create
+                    </button>
+                    <button
+                        type="button"
+                        class="btn primary"
+                        (click)="openCreateTable()"
+                        [disabled]="selectedRestaurantId() == null"
+                    >
+                        <i class="pi pi-plus"></i> New table
+                    </button>
+                }
+            </div>
+        </div>
+    </section>
+
+    @if (selectedRestaurantId() != null) {
+        <section class="tables-grid">
+            @for (t of tables(); track t.id) {
+                <article class="table-card" [class.inactive]="!t.isActive">
+                    <header class="t-head">
+                        <div class="t-number">#{{ t.number }}</div>
+                        <span class="status-pill" [attr.data-status]="t.status">
+                            {{ statusLabel(t.status) }}
+                        </span>
+                    </header>
+
+                    @if (t.label) {
+                        <div class="t-label">{{ t.label }}</div>
+                    }
+
+                    <div class="t-meta">
+                        <span><i class="pi pi-users"></i> {{ t.capacity }} seats</span>
+                        @if (t.location) {
+                            <span><i class="pi pi-map-marker"></i> {{ t.location }}</span>
+                        }
+                        @if (t.status === 'Occupied' && t.currentPartySize > 0) {
+                            <span><i class="pi pi-user"></i> {{ t.currentPartySize }} guests</span>
+                        }
+                    </div>
+
+                    <div class="t-actions">
+                        <button type="button" class="btn ghost" (click)="openQr(t)">
+                            <i class="pi pi-qrcode"></i> QR
+                        </button>
+                        @if (editMode()) {
+                            <button
+                                type="button"
+                                class="btn ghost"
+                                (click)="openEditTable(t)"
+                                [disabled]="!canEdit(t)"
+                                [title]="editLockTitle(t, 'Edit table')"
+                            >
+                                <i class="pi pi-pencil"></i>
+                            </button>
+                            @if (isAdmin) {
+                                <button
+                                    type="button"
+                                    class="btn ghost"
+                                    (click)="rotateToken(t)"
+                                    [disabled]="!canEdit(t)"
+                                    [title]="editLockTitle(t, 'Rotate token')"
+                                >
+                                    <i class="pi pi-refresh"></i>
+                                </button>
+                            }
+                            <button
+                                type="button"
+                                class="btn danger"
+                                (click)="deleteTable(t)"
+                                [disabled]="!canEdit(t)"
+                                [title]="editLockTitle(t, 'Delete table')"
+                            >
+                                <i class="pi pi-trash"></i>
+                            </button>
+                        }
+                    </div>
+                </article>
+            } @empty {
+                <section class="card empty-state">
+                    <p>No tables yet. Enable Edit mode to add your first one.</p>
+                    @if (editMode()) {
+                        <div class="row">
+                            <button type="button" class="btn ghost" (click)="openBulk()">
+                                <i class="pi pi-list"></i> Bulk create
+                            </button>
+                            <button type="button" class="btn primary" (click)="openCreateTable()">
+                                <i class="pi pi-plus"></i> New table
+                            </button>
+                        </div>
+                    }
+                </section>
+            }
+        </section>
+    }
+</div>
+
+<p-dialog
+    [visible]="tableDialog()"
+    (visibleChange)="$event ? tableDialog.set(true) : tableDialog.set(false)"
+    [modal]="true"
+    [style]="{ width: '560px' }"
+    [header]="editingTable ? 'Edit table' : 'New table'"
+    [dismissableMask]="true"
+>
+    <form [formGroup]="tableForm" (ngSubmit)="saveTable()" class="edit-form">
+        <div class="grid">
+            <div class="field">
+                <label for="t-number">Number *</label>
+                <input pInputText id="t-number" type="number" min="1" formControlName="number" />
+            </div>
+            <div class="field">
+                <label for="t-label">Label</label>
+                <input pInputText id="t-label" type="text" formControlName="label" />
+            </div>
+            <div class="field">
+                <label for="t-cap">Capacity *</label>
+                <input pInputText id="t-cap" type="number" min="1" max="50" formControlName="capacity" />
+            </div>
+            <div class="field">
+                <label for="t-status">Status</label>
+                <p-select
+                    id="t-status"
+                    [options]="statusOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    formControlName="status"
+                    appendTo="body"
+                />
+            </div>
+            <div class="field">
+                <label for="t-loc">Location</label>
+                <input pInputText id="t-loc" type="text" formControlName="location" />
+            </div>
+            <div class="field">
+                <label for="t-party">Party size</label>
+                <input pInputText id="t-party" type="number" min="0" formControlName="currentPartySize" />
+            </div>
+            <div class="field span-2">
+                <label for="t-notes">Notes</label>
+                <textarea pTextarea id="t-notes" rows="2" formControlName="notes"></textarea>
+            </div>
+            <div class="field toggle-field">
+                <label>Active</label>
+                <p-toggleswitch formControlName="isActive" />
+            </div>
+        </div>
+
+        <div class="actions-row">
+            <button type="button" class="btn ghost" (click)="tableDialog.set(false)">Cancel</button>
+            <button
+                type="submit"
+                class="btn primary"
+                [disabled]="tableForm.invalid || loadingService.isLoading(SAVE_TABLE_KEY)"
+            >
+                @if (loadingService.isLoading(SAVE_TABLE_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                } @else {
+                    Save
+                }
+            </button>
+        </div>
+    </form>
+</p-dialog>
+
+<p-dialog
+    [visible]="bulkDialog()"
+    (visibleChange)="$event ? bulkDialog.set(true) : bulkDialog.set(false)"
+    [modal]="true"
+    [style]="{ width: '480px' }"
+    header="Bulk create tables"
+    [dismissableMask]="true"
+>
+    <form [formGroup]="bulkForm" (ngSubmit)="saveBulk()" class="edit-form">
+        <p class="muted">
+            Creates sequential tables starting from the chosen number. Leave starting number at 0
+            to auto-continue from the highest existing one.
+        </p>
+        <div class="grid">
+            <div class="field">
+                <label for="b-count">How many *</label>
+                <input pInputText id="b-count" type="number" min="1" max="200" formControlName="count" />
+            </div>
+            <div class="field">
+                <label for="b-start">Starting number</label>
+                <input pInputText id="b-start" type="number" min="0" formControlName="startingNumber" />
+            </div>
+            <div class="field">
+                <label for="b-cap">Capacity *</label>
+                <input pInputText id="b-cap" type="number" min="1" max="50" formControlName="capacity" />
+            </div>
+            <div class="field">
+                <label for="b-loc">Location</label>
+                <input pInputText id="b-loc" type="text" formControlName="location" />
+            </div>
+        </div>
+
+        <div class="actions-row">
+            <button type="button" class="btn ghost" (click)="bulkDialog.set(false)">Cancel</button>
+            <button
+                type="submit"
+                class="btn primary"
+                [disabled]="bulkForm.invalid || loadingService.isLoading(BULK_TABLE_KEY)"
+            >
+                @if (loadingService.isLoading(BULK_TABLE_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                } @else {
+                    Create
+                }
+            </button>
+        </div>
+    </form>
+</p-dialog>
+
+<p-dialog
+    [visible]="qrDialog()"
+    (visibleChange)="$event ? qrDialog.set(true) : qrDialog.set(false)"
+    [modal]="true"
+    [style]="{ width: '380px' }"
+    header="Table QR"
+    [dismissableMask]="true"
+>
+    @if (qrTable(); as t) {
+        <div class="qr-body">
+            <h3>Table #{{ t.number }}</h3>
+            <img [src]="qrImageUrl(t.qrToken)" alt="QR code" class="qr-img" />
+            <p class="qr-link">{{ qrUrl(t.qrToken) }}</p>
+            <div class="actions-row">
+                <button type="button" class="btn ghost" (click)="copyLink(t.qrToken)">
+                    <i class="pi pi-copy"></i> Copy link
+                </button>
+                <button type="button" class="btn primary" (click)="qrDialog.set(false)">Close</button>
+            </div>
+        </div>
+    }
+</p-dialog>

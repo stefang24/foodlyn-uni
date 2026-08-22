@@ -1,0 +1,111 @@
+@let i = item();
+
+<article
+    class="menu-card"
+    [class.unavailable]="!i.isAvailable || !i.isActive"
+    [class.featured]="i.isFeatured"
+>
+    <div class="media">
+        @if (i.imageUrl) {
+            <img [src]="i.imageUrl | imageUrl" [alt]="i.name" loading="lazy" />
+        } @else {
+            <div class="placeholder">
+                <i class="pi pi-image"></i>
+            </div>
+        }
+
+        @if (i.isNew) {
+            <span class="corner-badge new">New</span>
+        }
+        @if (i.isFeatured) {
+            <span class="corner-badge featured">Featured</span>
+        }
+        @if (!i.isAvailable) {
+            <span class="corner-badge sold-out">Unavailable</span>
+        }
+    </div>
+
+    <div class="body">
+        <div class="title-row">
+            <h3 class="name">{{ i.name }}</h3>
+            <div class="price">
+                @if (i.discountedPrice != null) {
+                    <span class="old">{{ i.price | currency: (currency() ?? 'USD') : 'symbol' : '1.2-2' }}</span>
+                    <span class="now">{{
+                        i.discountedPrice | currency: (currency() ?? 'USD') : 'symbol' : '1.2-2'
+                    }}</span>
+                } @else {
+                    <span class="now">{{ i.price | currency: (currency() ?? 'USD') : 'symbol' : '1.2-2' }}</span>
+                }
+            </div>
+        </div>
+
+        @if (i.shortDescription || i.description) {
+            <p class="desc">{{ i.shortDescription ?? i.description }}</p>
+        }
+
+        <div class="meta">
+            @if (i.preparationTimeMinutes) {
+                <span class="chip"><i class="pi pi-clock"></i>{{ i.preparationTimeMinutes }} min</span>
+            }
+            @if (i.calories) {
+                <span class="chip"><i class="pi pi-bolt"></i>{{ i.calories }} kcal</span>
+            }
+            @if (i.servingSizeGrams) {
+                <span class="chip">{{ i.servingSizeGrams }} g</span>
+            }
+            @if (i.spicinessLevel > 0) {
+                <span class="chip spicy" title="Spiciness">
+                    @for (_ of spicinessDots(i.spicinessLevel); track $index) {
+                        <i class="pi pi-bolt"></i>
+                    }
+                </span>
+            }
+        </div>
+
+        @if (dietaryBadges(i).length) {
+            <div class="badges">
+                @for (b of dietaryBadges(i); track b.label) {
+                    <span class="badge"><i [class]="b.icon"></i>{{ b.label }}</span>
+                }
+            </div>
+        }
+
+        @if (i.tags.length) {
+            <div class="tags">
+                @for (t of i.tags; track t) {
+                    <span class="tag">#{{ t }}</span>
+                }
+            </div>
+        }
+
+        @if (i.allergens.length) {
+            <p class="allergens">
+                <strong>Allergens:</strong>
+                {{ i.allergens.join(', ') }}
+            </p>
+        }
+
+        @if (editable()) {
+            <div class="actions">
+                <button type="button" class="icon-btn" (click)="onEdit()" aria-label="Edit">
+                    <i class="pi pi-pencil"></i>
+                </button>
+                <button type="button" class="icon-btn danger" (click)="onRemove()" aria-label="Remove">
+                    <i class="pi pi-trash"></i>
+                </button>
+            </div>
+        } @else if (orderable()) {
+            <div class="actions">
+                <button
+                    type="button"
+                    class="order-btn"
+                    (click)="onOrder()"
+                    [disabled]="!i.isAvailable || !i.isActive"
+                >
+                    <i class="pi pi-plus"></i> Add to cart
+                </button>
+            </div>
+        }
+    </div>
+</article>

@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Foodlyn.API/Foodlyn.API.csproj" />
+    <Project Path="src/Foodlyn.Persistence/Foodlyn.Persistence.csproj" />
+    <Project Path="src/Foodlyn.Shared/Foodlyn.Shared.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <Project Path="src/Modules/Foodlyn.Modules.Identity/Foodlyn.Modules.Identity.csproj" />
+    <Project Path="src/Modules/Foodlyn.Modules.Menus/Foodlyn.Modules.Menus.csproj" />
+    <Project Path="src/Modules/Foodlyn.Modules.Notifications/Foodlyn.Modules.Notifications.csproj" />
+    <Project Path="src/Modules/Foodlyn.Modules.Ordering/Foodlyn.Modules.Ordering.csproj" />
+    <Project Path="src/Modules/Foodlyn.Modules.Restaurants/Foodlyn.Modules.Restaurants.csproj" />
+  </Folder>
+</Solution>

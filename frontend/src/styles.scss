@@ -1,0 +1,158 @@
+@use '@angular/material' as mat;
+
+html {
+    height: 100%;
+    @include mat.theme(
+        (
+            color: (
+                primary: mat.$rose-palette,
+                tertiary: mat.$red-palette,
+            ),
+            typography: Roboto,
+            density: 0,
+        )
+    );
+}
+
+body {
+    background-color: var(--mat-sys-surface);
+    color: var(--mat-sys-on-surface);
+    font: var(--mat-sys-body-medium);
+    margin: 0;
+    height: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+@import 'primeicons/primeicons.css';
+
+body {
+    margin: 0;
+}
+
+$foodlyn-primary: rgb(125, 7, 7);
+$foodlyn-primary-dark: rgb(70, 4, 4);
+
+p-confirmdialog .p-confirmdialog-footer,
+p-confirm-dialog .p-confirmdialog-footer,
+.p-confirm-dialog .p-confirmdialog-footer {
+    .p-button {
+        border-radius: 10px !important;
+        font-weight: 700 !important;
+
+        &.p-confirm-dialog-reject,
+        &[severity='secondary'] {
+            background: white !important;
+            color: $foodlyn-primary !important;
+            border: 2px solid $foodlyn-primary !important;
+            box-shadow: none !important;
+
+            &:hover {
+                background: rgba(125, 7, 7, 0.06) !important;
+            }
+        }
+
+        &.p-confirm-dialog-accept,
+        &:not(.p-confirm-dialog-reject):not([severity='secondary']) {
+            background: linear-gradient(135deg, $foodlyn-primary 0%, $foodlyn-primary-dark 100%) !important;
+            border: 2px solid $foodlyn-primary-dark !important;
+            color: white !important;
+
+            &:hover {
+                box-shadow: 0 6px 14px rgba(125, 7, 7, 0.25) !important;
+            }
+        }
+    }
+}
+
+.p-select-overlay .p-select-option.p-select-option-selected,
+.p-select-overlay .p-select-option[aria-selected='true'] {
+    background: rgba(125, 7, 7, 0.1) !important;
+    color: $foodlyn-primary !important;
+}
+.p-select-overlay .p-select-option.p-focus,
+.p-select-overlay .p-select-option:hover {
+    background: rgba(125, 7, 7, 0.06) !important;
+    color: $foodlyn-primary-dark !important;
+}
+.p-select:not(.p-disabled).p-focus,
+.p-select:not(.p-disabled):hover {
+    border-color: $foodlyn-primary !important;
+    box-shadow: 0 0 0 2px rgba(125, 7, 7, 0.15) !important;
+}
+
+.p-button {
+    &.p-button-text {
+        color: $foodlyn-primary !important;
+
+        &:hover {
+            background: rgba(125, 7, 7, 0.08) !important;
+            color: $foodlyn-primary-dark !important;
+        }
+    }
+
+    &:not(.p-button-text):not(.p-button-outlined):not(.p-button-link):not(.p-confirm-dialog-reject) {
+        background: linear-gradient(135deg, $foodlyn-primary 0%, $foodlyn-primary-dark 100%) !important;
+        border: 1px solid $foodlyn-primary-dark !important;
+        color: #fff !important;
+
+        &:hover:not(:disabled) {
+            box-shadow: 0 4px 12px rgba(125, 7, 7, 0.25) !important;
+        }
+    }
+}
+
+.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+    background: $foodlyn-primary !important;
+    border-color: $foodlyn-primary-dark !important;
+}
+
+.p-inputtext:enabled:focus,
+.p-inputtext:enabled:hover {
+    border-color: $foodlyn-primary !important;
+    box-shadow: 0 0 0 2px rgba(125, 7, 7, 0.15) !important;
+}
+
+.p-datatable .p-datatable-thead > tr > th.p-datatable-sortable-column.p-datatable-column-sorted,
+.p-datatable .p-datatable-thead > tr > th.p-sortable-column.p-highlight,
+.p-datatable .p-datatable-thead > tr > th[aria-sort='ascending'],
+.p-datatable .p-datatable-thead > tr > th[aria-sort='descending'] {
+    background: transparent !important;
+    color: inherit !important;
+
+    .p-sortable-column-icon,
+    .p-datatable-sort-icon {
+        color: $foodlyn-primary !important;
+    }
+}
+
+.p-datatable .p-datatable-thead > tr > th.p-sortable-column:hover,
+.p-datatable .p-datatable-thead > tr > th.p-datatable-sortable-column:hover {
+    background: rgba(15, 23, 42, 0.03) !important;
+    color: inherit !important;
+}
+
+.p-dialog-mask {
+    align-items: flex-start !important;
+    padding-top: 84px !important;
+    padding-bottom: 24px !important;
+}
+
+.p-dialog:not(.p-dialog-maximized) {
+    max-height: calc(100vh - 140px) !important;
+
+    .p-dialog-content {
+        overflow-y: auto;
+    }
+}
+
+@media (max-width: 640px) {
+    .p-dialog-mask {
+        padding-top: 72px !important;
+        padding-bottom: 12px !important;
+    }
+
+    .p-dialog:not(.p-dialog-maximized) {
+        max-height: calc(100vh - 96px) !important;
+    }
+}

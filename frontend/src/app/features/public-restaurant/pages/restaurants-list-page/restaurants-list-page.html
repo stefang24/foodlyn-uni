@@ -1,0 +1,124 @@
+<div class="listpage">
+    <header class="brand-bar">
+        @if (isLoggedIn()) {
+            <a class="brand" (click)="goHome()">
+                <img src="assets/images/foodlyn.png" alt="Foodlyn" class="brand-logo" />
+            </a>
+        } @else {
+            <button type="button" class="home-back" (click)="back()">
+                <i class="pi pi-arrow-left"></i>
+                <span>Home</span>
+            </button>
+        }
+
+        <div class="search big">
+            <i class="pi pi-search"></i>
+            <input
+                type="text"
+                placeholder="Search on Foodlyn..."
+                [ngModel]="query()"
+                (ngModelChange)="query.set($event)"
+            />
+        </div>
+
+        <div class="brand-actions">
+            @if (isLoggedIn()) {
+                <button
+                    type="button"
+                    class="avatar-btn"
+                    [class.has-image]="photoUrl()"
+                    (click)="goToProfile()"
+                    title="My profile"
+                >
+                    @if (photoUrl(); as ph) {
+                        <img [src]="ph" alt="" />
+                    } @else {
+                        <span>{{ initials() }}</span>
+                    }
+                </button>
+            } @else {
+                <button type="button" class="login-btn" (click)="goToLogin()">
+                    <i class="pi pi-sign-in"></i> Login
+                </button>
+            }
+        </div>
+    </header>
+
+    <section class="title-row">
+        <div>
+            <h1>Restaurants</h1>
+            <p>All restaurants on Foodlyn.</p>
+        </div>
+    </section>
+
+    @if (cuisines().length > 0) {
+        <div class="chips">
+            <button
+                type="button"
+                class="chip"
+                [class.active]="activeCuisine() === null"
+                (click)="setCuisine(null)"
+            >
+                All
+            </button>
+            @for (c of cuisines(); track c) {
+                <button
+                    type="button"
+                    class="chip"
+                    [class.active]="activeCuisine() === c"
+                    (click)="setCuisine(c)"
+                >
+                    {{ c }}
+                </button>
+            }
+        </div>
+    }
+
+    @if (loading()) {
+        <div class="state">
+            <i class="pi pi-spin pi-spinner"></i>
+            <p>Loading restaurants...</p>
+        </div>
+    } @else if (filtered().length === 0) {
+        <div class="state">
+            <i class="pi pi-inbox"></i>
+            <p>No restaurants match your search.</p>
+        </div>
+    } @else {
+        <section class="grid">
+            @for (r of filtered(); track r.id) {
+                <article class="rcard" (click)="open(r.slug)">
+                    <div
+                        class="cover"
+                        [style.background-image]="r.coverImageUrl ? 'url(' + r.coverImageUrl + ')' : null"
+                    >
+                        @if (!r.coverImageUrl) {
+                            <i class="pi pi-shop"></i>
+                        }
+                        @if (r.logoUrl) {
+                            <img [src]="r.logoUrl | imageUrl" alt="" class="logo" />
+                        }
+                    </div>
+                    <div class="body">
+                        <div class="head">
+                            <h3>{{ r.name }}</h3>
+                            <span class="eta">{{ deliveryEta(r) }}</span>
+                        </div>
+
+                        <div class="meta">
+                            @if (r.cuisine) { <span>{{ r.cuisine }}</span> }
+                            <span class="tier">{{ priceTier(r) }}</span>
+                            @if (cityLine(r)) {
+                                <span class="city"><i class="pi pi-map-marker"></i> {{ cityLine(r) }}</span>
+                            }
+                        </div>
+
+                        @if (r.description) {
+                            <p class="desc">{{ r.description }}</p>
+                        }
+                    </div>
+                </article>
+            }
+        </section>
+    }
+</div>

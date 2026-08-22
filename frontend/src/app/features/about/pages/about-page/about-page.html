@@ -1,0 +1,96 @@
+<div class="about-page">
+    @if (!isLoggedIn()) {
+        <header class="top">
+            <button type="button" class="back" (click)="back()">
+                <i class="pi pi-arrow-left"></i> Home
+            </button>
+        </header>
+    }
+
+    <section class="hero">
+        <div class="hero-inner">
+            <span class="eyebrow">ABOUT US</span>
+            <h1>Built by <span class="brand">Lynflare</span>. <br />Served by <span class="accent">Foodlyn</span>.</h1>
+            <p class="lead">
+                Foodlyn is a modern restaurant operating system - QR ordering, kitchen displays,
+                cashier flow and manager insights in one place. It's built, designed and shipped
+                by Lynflare, a small product studio that loves hospitality software.
+            </p>
+        </div>
+    </section>
+
+    <section class="cards">
+        <article class="card">
+            <div class="card-ico"><i class="pi pi-building"></i></div>
+            <h3>Lynflare</h3>
+            <p>
+                We're a lean software company focused on hospitality tooling. We believe
+                restaurants deserve software that feels like a native app - fast, obvious,
+                and reliable during a Saturday-night rush.
+            </p>
+        </article>
+
+        <article class="card">
+            <div class="card-ico"><i class="pi pi-star-fill"></i></div>
+            <h3>Foodlyn</h3>
+            <p>
+                Foodlyn is our flagship product. One platform for guests, waiters, cooks,
+                cashiers and managers. QR-first ordering, live kitchen boards, role-scoped
+                dashboards and clean reporting.
+            </p>
+        </article>
+
+        <article class="card">
+            <div class="card-ico"><i class="pi pi-compass"></i></div>
+            <h3>Our mission</h3>
+            <p>
+                Cut the friction between a guest scanning a QR code and the kitchen getting
+                to work - while giving managers clear signals about what's actually
+                happening on the floor.
+            </p>
+        </article>
+    </section>
+
+    <section class="values">
+        <h2>What we care about</h2>
+        <div class="value-grid">
+            <div class="value">
+                <i class="pi pi-bolt"></i>
+                <h4>Speed on the floor</h4>
+                <p>Every screen is designed to be used under pressure, one-handed, during service.</p>
+            </div>
+            <div class="value">
+                <i class="pi pi-lock"></i>
+                <h4>Role-scoped access</h4>
+                <p>Guests, waiters, cooks, cashiers, managers and admins see only what they need.</p>
+            </div>
+            <div class="value">
+                <i class="pi pi-sync"></i>
+                <h4>Real-time everything</h4>
+                <p>Orders, table statuses and queues update live across every screen via SignalR.</p>
+            </div>
+            <div class="value">
+                <i class="pi pi-heart-fill"></i>
+                <h4>Made with care</h4>
+                <p>We ship small, consistent improvements weekly - based on what crews actually ask for.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <h2>Say hi</h2>
+        <p>Questions, pilots, partnerships - we'd love to chat.</p>
+        <div class="cta-row">
+            <a class="btn primary" href="mailto:hello@lynflare.com">
+                <i class="pi pi-envelope"></i> hello&#64;lynflare.com
+            </a>
+            <a class="btn ghost" href="https://lynflare.com" target="_blank" rel="noopener">
+                <i class="pi pi-external-link"></i> lynflare.com
+            </a>
+        </div>
+    </section>
+
+    <footer class="foot">
+        <p>&copy; Foodlyn · Lynflare Company 2026</p>
+    </footer>
+</div>

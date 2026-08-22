@@ -1,0 +1,291 @@
+<div class="tracker-page">
+    <header class="topbar">
+        <button type="button" class="icon-btn" (click)="back()">
+            <i class="pi pi-arrow-left"></i>
+        </button>
+        <div class="title">
+            <h1>Order #{{ order()?.id }}</h1>
+            @if (session(); as s) {
+                <p>{{ s.restaurantName }} · Table #{{ s.tableNumber }}</p>
+            } @else if (restaurant(); as r) {
+                <p>{{ r.name }}</p>
+            }
+        </div>
+        <div class="header-actions">
+            <button
+                type="button"
+                class="icon-btn sound-btn"
+                (click)="sound.toggleMute()"
+                [attr.title]="sound.muted() ? 'Unmute updates' : 'Mute updates'"
+            >
+                <i [class]="'pi ' + (sound.muted() ? 'pi-volume-off' : 'pi-volume-up')"></i>
+            </button>
+            @if (hasSession()) {
+                <button type="button" class="btn accent small" (click)="openCallWaiter()">
+                    <i class="pi pi-bell"></i> Call waiter
+                </button>
+            }
+            @if (isCancelable() && hasSession()) {
+                <button type="button" class="btn ghost small" (click)="endSession()">
+                    <i class="pi pi-sign-out"></i> End session
+                </button>
+            }
+        </div>
+    </header>
+
+    @if (tableOrders().length > 1) {
+        <nav class="order-tabs">
+            @for (o of tableOrders(); track o.id) {
+                <button
+                    type="button"
+                    class="order-tab"
+                    [class.active]="o.id === order()?.id"
+                    (click)="switchTab(o.id)"
+                >
+                    #{{ o.id }}
+                    <span class="tab-status">{{ o.status }}</span>
+                </button>
+            }
+        </nav>
+    }
+
+    @if (loadingService.isLoading(LOAD_KEY) && !order()) {
+        <div class="status">
+            <i class="pi pi-spin pi-spinner"></i>
+            <p>Loading order...</p>
+        </div>
+    } @else if (order(); as o) {
+        <section class="hero">
+            @if (o.status === 'Placed') {
+                <div class="hero-body">
+                    <i class="pi pi-hourglass big spin"></i>
+                    <h2>Waiting for approval</h2>
+                    <p>Cashier will approve your order shortly.</p>
+                </div>
+            } @else if (o.status === 'Approved') {
+                <div class="hero-body">
+                    <i class="pi pi-check-circle big green"></i>
+                    <h2>Approved</h2>
+                    <p>Kitchen will start preparing soon.</p>
+                </div>
+            } @else if (o.status === 'Preparing') {
+                <div class="clock">
+                    <svg viewBox="0 0 120 120" class="ring">
+                        <circle class="bg" cx="60" cy="60" r="52" />
+                        <circle
+                            class="fg"
+                            cx="60"
+                            cy="60"
+                            r="52"
+                            [style.stroke-dashoffset]="326.7 - (326.7 * progressPct()) / 100"
+                        />
+                    </svg>
+                    <div class="inner">
+                        <i class="pi pi-clock"></i>
+                        <div class="time">{{ remainingLabel() }}</div>
+                        <div class="label">remaining</div>
+                    </div>
+                </div>
+                <div class="hero-body">
+                    <h2>Preparing your order</h2>
+                    <p>Estimated {{ o.prepTimeMinutes }} minutes total.</p>
+                </div>
+            } @else if (o.status === 'Ready') {
+                <div class="hero-body">
+                    <i class="pi pi-bell big green"></i>
+                    <h2>Your order is ready</h2>
+                    <p>A waiter will bring it to your table shortly.</p>
+                </div>
+            } @else if (o.status === 'Served' || o.status === 'AwaitingPayment' || o.status === 'Completed') {
+                <div class="hero-body">
+                    <i class="pi pi-flag-fill big green"></i>
+                    <h2>Served - enjoy your meal!</h2>
+                    @if (o.status === 'AwaitingPayment') {
+                        <p>When you're done, head to the cashier to pay in cash.</p>
+                    } @else if (o.status === 'Completed') {
+                        <p>Payment received. Thanks for dining with us!</p>
+                    } @else {
+                        <p>Thanks for ordering with us.</p>
+                    }
+                </div>
+            } @else if (o.status === 'Rejected') {
+                <div class="hero-body">
+                    <i class="pi pi-times-circle big red"></i>
+                    <h2>Order rejected</h2>
+                    @if (o.rejectedReason) {
+                        <p>Reason: {{ o.rejectedReason }}</p>
+                    } @else {
+                        <p>Unfortunately the restaurant could not accept your order.</p>
+                    }
+                </div>
+            } @else if (o.status === 'Cancelled') {
+                <div class="hero-body">
+                    <i class="pi pi-ban big red"></i>
+                    <h2>Order cancelled</h2>
+                </div>
+            }
+        </section>
+
+        <section class="timeline">
+            @for (step of timeline(); track step.key) {
+                <div
+                    class="step"
+                    [class.reached]="step.reached"
+                    [class.active]="step.active"
+                >
+                    <div class="dot"><i [class]="step.icon"></i></div>
+                    <div class="meta">
+                        <div class="lbl">{{ step.label }}</div>
+                        @if (step.at) {
+                            <div class="at">{{ step.at | date: 'shortTime' }}</div>
+                        }
+                    </div>
+                </div>
+            }
+        </section>
+
+        <section class="items">
+            <h3>Items</h3>
+            @for (i of o.items; track i.id) {
+                <div class="row">
+                    <div>
+                        <strong>{{ i.quantity }} × {{ i.name }}</strong>
+                        @if (i.modifiers.length > 0) {
+                            <ul class="mods">
+                                @for (m of i.modifiers; track m.id) {
+                                    <li>
+                                        {{ m.groupName }}: {{ m.name }}
+                                        @if (m.price > 0) {
+                                            <span> (+{{ m.price | currency: (o.currency ?? 'USD') }})</span>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        @if (i.notes) {
+                            <p class="notes">{{ i.notes }}</p>
+                        }
+                    </div>
+                    <span>
+                        {{ i.price * i.quantity | currency: (o.currency ?? 'USD') : 'symbol' : '1.2-2' }}
+                    </span>
+                </div>
+            }
+            <div class="row total">
+                <strong>Total</strong>
+                <strong>{{ o.totalAmount | currency: (o.currency ?? 'USD') : 'symbol' : '1.2-2' }}</strong>
+            </div>
+        </section>
+
+        @if (o.status === 'Placed') {
+            <button type="button" class="btn danger" (click)="cancel()">
+                <i class="pi pi-times"></i> Cancel order
+            </button>
+        }
+        @if (canFinishEating() && hasSession()) {
+            <button type="button" class="btn primary" (click)="finishedEating()">
+                <i class="pi pi-check-circle"></i> Finished eating
+            </button>
+        }
+        @if (isCancelable() && hasSession()) {
+            <button type="button" class="btn primary" (click)="back()">
+                <i class="pi pi-arrow-left"></i> Back to menu
+            </button>
+        }
+    }
+</div>
+
+<p-dialog
+    [visible]="callWaiterDialog()"
+    (visibleChange)="callWaiterDialog.set($event)"
+    [modal]="true"
+    [dismissableMask]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '420px' }"
+    header="Call the waiter"
+>
+    <div class="call-dialog">
+        <p class="muted">
+            Send an optional note. The waiter will see your table number and come to you.
+        </p>
+        <input
+            pInputText
+            type="text"
+            placeholder="Optional note"
+            [ngModel]="callMessage()"
+            (ngModelChange)="callMessage.set($event)"
+            maxlength="200"
+        />
+        <div class="actions">
+            <button
+                type="button"
+                class="btn ghost small"
+                (click)="callWaiterDialog.set(false)"
+                [disabled]="callSending()"
+            >
+                Cancel
+            </button>
+            <button
+                type="button"
+                class="btn primary small"
+                (click)="submitCallWaiter()"
+                [disabled]="callSending()"
+            >
+                @if (callSending()) {
+                    <i class="pi pi-spin pi-spinner"></i> Sending...
+                } @else {
+                    <i class="pi pi-bell"></i> Call waiter
+                }
+            </button>
+        </div>
+    </div>
+</p-dialog>
+
+<p-dialog
+    [visible]="endSessionDialog()"
+    (visibleChange)="endSessionDialog.set($event)"
+    [modal]="true"
+    [dismissableMask]="!endingSession()"
+    [closable]="!endingSession()"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '420px' }"
+    [header]="endSessionMode() === 'finished' ? 'Finished eating?' : 'End session?'"
+>
+    <div class="call-dialog">
+        <p class="muted">
+            @if (endSessionMode() === 'finished') {
+                This frees up your table for the next guest. You'll be signed out of this session.
+            } @else {
+                This will close your session at this table. The QR will be refreshed for the next guest.
+            }
+        </p>
+        <div class="actions">
+            <button
+                type="button"
+                class="btn ghost small"
+                (click)="endSessionDialog.set(false)"
+                [disabled]="endingSession()"
+            >
+                Cancel
+            </button>
+            <button
+                type="button"
+                class="btn primary small"
+                (click)="confirmEndSession()"
+                [disabled]="endingSession()"
+            >
+                @if (endingSession()) {
+                    <i class="pi pi-spin pi-spinner"></i> Closing...
+                } @else if (endSessionMode() === 'finished') {
+                    <i class="pi pi-check-circle"></i> Finished eating
+                } @else {
+                    <i class="pi pi-sign-out"></i> End session
+                }
+            </button>
+        </div>
+    </div>
+</p-dialog>
+
+<p-confirm-dialog />

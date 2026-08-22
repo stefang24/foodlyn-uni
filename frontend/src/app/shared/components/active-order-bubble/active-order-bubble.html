@@ -1,0 +1,29 @@
+@if (visible()) {
+    <div class="bubble-stack">
+        @for (o of orders(); track o.id) {
+            @if (!isOnTrackerOf(o)) {
+                <button
+                    type="button"
+                    class="bubble"
+                    [class.bubble-ready]="o.status === 'Ready'"
+                    (click)="open(o)"
+                    [attr.aria-label]="'Open order #' + o.id"
+                    title="Open order tracking"
+                >
+                    <span class="logo">
+                        @if (logoFor(o); as url) {
+                            <img [src]="url" alt="" />
+                        } @else {
+                            <span class="initial">{{ initialFor(o) }}</span>
+                        }
+                    </span>
+                    <span class="info">
+                        <span class="num">#{{ o.id }}</span>
+                        <span class="status">{{ statusFor(o) }}</span>
+                    </span>
+                    <i class="pi pi-chevron-right chev"></i>
+                </button>
+            }
+        }
+    </div>
+}

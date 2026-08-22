@@ -1,0 +1,97 @@
+@if (session(); as s) {
+    <div class="cart-page">
+        <header class="topbar">
+            <button type="button" class="icon-btn" (click)="back()">
+                <i class="pi pi-arrow-left"></i>
+            </button>
+            <div class="title">
+                <h1>Your order</h1>
+                <p>{{ s.restaurantName }} · Table #{{ s.tableNumber }}</p>
+            </div>
+        </header>
+
+        @if (tableSession.cartCount() === 0) {
+            <div class="status">
+                <i class="pi pi-shopping-cart"></i>
+                <p>Your cart is empty.</p>
+                <button type="button" class="btn primary" (click)="back()">Browse menu</button>
+            </div>
+        } @else {
+            <section class="lines">
+                @for (l of tableSession.cart(); track l.id) {
+                    <article class="line">
+                        <div class="media">
+                            @if (l.imageUrl) {
+                                <img [src]="l.imageUrl | imageUrl" [alt]="l.name" />
+                            } @else {
+                                <div class="placeholder"><i class="pi pi-image"></i></div>
+                            }
+                        </div>
+                        <div class="info">
+                            <h3>{{ l.name }}</h3>
+                            @if (l.addedByLabel) {
+                                <p class="added-by"><i class="pi pi-user"></i> {{ l.addedByLabel }}</p>
+                            }
+                            @if (l.modifiers.length > 0) {
+                                <ul class="mods">
+                                    @for (m of l.modifiers; track m.id) {
+                                        <li>
+                                            <span>{{ m.groupName }}: {{ m.name }}</span>
+                                            @if (m.price > 0) {
+                                                <span class="mod-price">
+                                                    +{{ m.price | currency: (currency() ?? 'USD') : 'symbol' : '1.2-2' }}
+                                                </span>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            @if (l.notes) {
+                                <p class="notes">{{ l.notes }}</p>
+                            }
+                            <p class="price">
+                                {{ l.unitPrice | currency: (currency() ?? 'USD') : 'symbol' : '1.2-2' }}
+                            </p>
+                        </div>
+                        <div class="controls">
+                            <div class="qty-ctrl">
+                                <button type="button" (click)="dec(l.id, l.quantity)">
+                                    <i class="pi pi-minus"></i>
+                                </button>
+                                <span>{{ l.quantity }}</span>
+                                <button type="button" (click)="inc(l.id, l.quantity)">
+                                    <i class="pi pi-plus"></i>
+                                </button>
+                            </div>
+                            <button type="button" class="remove" (click)="remove(l.id)">
+                                <i class="pi pi-trash"></i>
+                            </button>
+                        </div>
+                    </article>
+                }
+            </section>
+
+            <section class="notes-section">
+                <label for="order-notes">Order notes (optional)</label>
+                <textarea
+                    id="order-notes"
+                    [(ngModel)]="notes"
+                    rows="3"
+                    placeholder="Allergies, delivery instructions, etc."
+                ></textarea>
+            </section>
+
+            <footer class="summary">
+                <div class="totals">
+                    <span>Total</span>
+                    <strong>
+                        {{ tableSession.cartTotal() | currency: (currency() ?? 'USD') : 'symbol' : '1.2-2' }}
+                    </strong>
+                </div>
+                <button type="button" class="btn primary place" (click)="proceedToPayment()">
+                    <i class="pi pi-credit-card"></i> Proceed to payment
+                </button>
+            </footer>
+        }
+    </div>
+}

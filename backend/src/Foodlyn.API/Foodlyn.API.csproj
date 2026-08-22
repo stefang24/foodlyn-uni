@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mapster" Version="10.0.7" />
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Foodlyn.Persistence\Foodlyn.Persistence.csproj" />
+    <ProjectReference Include="..\Foodlyn.Shared\Foodlyn.Shared.csproj" />
+    <ProjectReference Include="..\Modules\Foodlyn.Modules.Identity\Foodlyn.Modules.Identity.csproj" />
+    <ProjectReference Include="..\Modules\Foodlyn.Modules.Restaurants\Foodlyn.Modules.Restaurants.csproj" />
+    <ProjectReference Include="..\Modules\Foodlyn.Modules.Menus\Foodlyn.Modules.Menus.csproj" />
+    <ProjectReference Include="..\Modules\Foodlyn.Modules.Ordering\Foodlyn.Modules.Ordering.csproj" />
+    <ProjectReference Include="..\Modules\Foodlyn.Modules.Notifications\Foodlyn.Modules.Notifications.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Hubs\" />
+    <Folder Include="Middlewares\" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,126 @@
+<div class="register-page">
+    <header class="top">
+        <button type="button" class="back" (click)="goHome()">
+            <i class="pi pi-arrow-left"></i> Home
+        </button>
+    </header>
+
+    <section class="card">
+        <header class="card-head">
+
+            <img src="assets/images/foodlyn.png" alt="" (click)="goHome()">
+            <span class="eyebrow">CREATE ACCOUNT</span>
+            <h1>Join Foodlyn</h1>
+            <p class="lead">
+                Sign up as a customer to discover restaurants and place orders.
+            </p>
+
+        </header>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="form">
+            <div class="grid">
+                <div class="field">
+                    <label for="firstName">First name</label>
+                    <input pInputText id="firstName" type="text" formControlName="firstName" />
+                </div>
+                <div class="field">
+                    <label for="lastName">Last name</label>
+                    <input pInputText id="lastName" type="text" formControlName="lastName" />
+                </div>
+
+                <div class="field span-2">
+                    <label for="username">Username *</label>
+                    <input
+                        pInputText
+                        id="username"
+                        type="text"
+                        formControlName="username"
+                        [class.ng-invalid]="isInvalid('username')"
+                        [class.ng-dirty]="isInvalid('username')"
+                        autocomplete="username"
+                    />
+                    @if (isInvalid('username')) {
+                        <small class="error">{{ getErrorMessage('username') }}</small>
+                    }
+                </div>
+
+                <div class="field span-2">
+                    <label for="email">Email *</label>
+                    <input
+                        pInputText
+                        id="email"
+                        type="email"
+                        formControlName="email"
+                        [class.ng-invalid]="isInvalid('email')"
+                        [class.ng-dirty]="isInvalid('email')"
+                        autocomplete="email"
+                    />
+                    @if (isInvalid('email')) {
+                        <small class="error">{{ getErrorMessage('email') }}</small>
+                    }
+                </div>
+
+                <div class="field">
+                    <label for="password">Password *</label>
+                    <p-password
+                        id="password"
+                        formControlName="password"
+                        [toggleMask]="true"
+                        [fluid]="true"
+                        [inputStyleClass]="isInvalid('password') ? 'ng-invalid ng-dirty' : ''"
+                    />
+                    @if (isInvalid('password')) {
+                        <small class="error">{{ getErrorMessage('password') }}</small>
+                    }
+                </div>
+
+                <div class="field">
+                    <label for="confirm">Confirm password *</label>
+                    <p-password
+                        id="confirm"
+                        formControlName="confirmPassword"
+                        [feedback]="false"
+                        [toggleMask]="true"
+                        [fluid]="true"
+                        [inputStyleClass]="
+                            isInvalid('confirmPassword') || showMismatch() ? 'ng-invalid ng-dirty' : ''
+                        "
+                    />
+                    @if (showMismatch()) {
+                        <small class="error">Passwords do not match</small>
+                    }
+                </div>
+            </div>
+
+            <label class="terms-row">
+                <input type="checkbox" formControlName="acceptTerms" />
+                <span>
+                    I agree to the
+                    <a routerLink="/terms" target="_blank" rel="noopener">Terms of Use</a>
+                    and
+                    <a routerLink="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.
+                </span>
+            </label>
+            @if (isInvalid('acceptTerms')) {
+                <small class="error">You must accept the Terms and Privacy Policy to continue.</small>
+            }
+
+            <button
+                type="submit"
+                class="submit"
+                [disabled]="registerForm.invalid || loadingService.isLoading(REGISTER_KEY)"
+            >
+                @if (loadingService.isLoading(REGISTER_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i> Creating account...
+                } @else {
+                    <ng-container>Create account</ng-container>
+                }
+            </button>
+
+            <p class="alt">
+                Already have an account?
+                <a (click)="goToLogin()">Log in</a>
+            </p>
+        </form>
+    </section>
+</div>

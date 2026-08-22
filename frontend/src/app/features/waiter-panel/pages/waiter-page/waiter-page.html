@@ -1,0 +1,247 @@
+<div class="waiter-page">
+    <header class="topbar">
+        <div class="title">
+            <h1>Waiter</h1>
+            <p>Deliver orders and respond to guests</p>
+        </div>
+        <a class="new-order-btn" routerLink="/staff-order">
+            <i class="pi pi-plus"></i> New order
+        </a>
+        <nav class="tabs">
+            <button
+                type="button"
+                class="tab"
+                [class.active]="tab() === 'ready'"
+                (click)="setTab('ready')"
+            >
+                <i class="pi pi-bell"></i> Ready
+                <span class="badge" [class.hot]="readyCount() > 0">{{ readyCount() }}</span>
+            </button>
+            <button
+                type="button"
+                class="tab"
+                [class.active]="tab() === 'preparing'"
+                (click)="setTab('preparing')"
+            >
+                <i class="pi pi-clock"></i> Preparing
+                <span class="badge">{{ preparingCount() }}</span>
+            </button>
+            <button
+                type="button"
+                class="tab"
+                [class.active]="tab() === 'tables'"
+                (click)="setTab('tables')"
+            >
+                <i class="pi pi-th-large"></i> Tables
+            </button>
+            <button
+                type="button"
+                class="tab"
+                [class.active]="tab() === 'calls'"
+                (click)="setTab('calls')"
+            >
+                <i class="pi pi-phone"></i> Calls
+                <span class="badge" [class.hot]="callsCount() > 0">{{ callsCount() }}</span>
+            </button>
+            <button
+                type="button"
+                class="tab sound-tab"
+                (click)="sound.toggleMute()"
+                [attr.title]="sound.muted() ? 'Unmute sounds' : 'Mute sounds'"
+            >
+                <i [class]="'pi ' + (sound.muted() ? 'pi-volume-off' : 'pi-volume-up')"></i>
+            </button>
+        </nav>
+    </header>
+
+    @if (tab() === 'ready') {
+        @if (loadingService.isLoading(LOAD_KEY) && orders().length === 0) {
+            <div class="status">
+                <i class="pi pi-spin pi-spinner"></i>
+                <p>Loading orders...</p>
+            </div>
+        } @else if (ready().length === 0) {
+            <div class="status">
+                <i class="pi pi-inbox"></i>
+                <p>No orders ready.</p>
+            </div>
+        } @else {
+            <section class="grid">
+                @for (o of ready(); track o.id) {
+                    <article class="order order-clickable" (click)="openDetail(o)">
+                        <header>
+                            <div>
+                                <h3>Order #{{ o.id }}</h3>
+                                <p>
+                                    Table #{{ o.tableNumber }} · Party {{ o.partySize }} ·
+                                    {{ o.readyAt | date: 'shortTime' }}
+                                </p>
+                            </div>
+                            <strong>{{
+                                o.totalAmount | currency: (o.currency ?? 'USD') : 'symbol' : '1.2-2'
+                            }}</strong>
+                        </header>
+                        <ul class="items">
+                            @for (i of o.items; track i.id) {
+                                <li>
+                                    <div class="line">
+                                        <span class="qty">{{ i.quantity }}×</span>
+                                        <span class="name">{{ i.name }}</span>
+                                        @if (i.notes) {
+                                            <em class="notes">- {{ i.notes }}</em>
+                                        }
+                                    </div>
+                                    @if (i.modifiers.length > 0) {
+                                        <ul class="mods">
+                                            @for (m of i.modifiers; track m.id) {
+                                                <li>{{ m.groupName }}: {{ m.name }}</li>
+                                            }
+                                        </ul>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                        @if (o.deliveryNotes) {
+                            <p class="order-notes">
+                                <i class="pi pi-info-circle"></i> {{ o.deliveryNotes }}
+                            </p>
+                        }
+                        <div class="actions" (click)="$event.stopPropagation()">
+                            <button type="button" class="btn primary" (click)="markServed(o)">
+                                <i class="pi pi-flag-fill"></i> Mark served
+                            </button>
+                        </div>
+                    </article>
+                }
+            </section>
+        }
+    } @else if (tab() === 'preparing') {
+        @if (loadingService.isLoading(LOAD_KEY) && orders().length === 0) {
+            <div class="status">
+                <i class="pi pi-spin pi-spinner"></i>
+                <p>Loading orders...</p>
+            </div>
+        } @else if (preparing().length === 0) {
+            <div class="status">
+                <i class="pi pi-clock"></i>
+                <p>Nothing being prepared right now.</p>
+            </div>
+        } @else {
+            <section class="grid">
+                @for (o of preparing(); track o.id) {
+                    <article class="order preparing order-clickable" (click)="openDetail(o)">
+                        <header>
+                            <div>
+                                <h3>Order #{{ o.id }}</h3>
+                                <p>
+                                    Table #{{ o.tableNumber }} · Party {{ o.partySize }} ·
+                                    started {{ o.preparingStartedAt | date: 'shortTime' }}
+                                </p>
+                            </div>
+                            <div class="prep-timer">
+                                <div class="time">{{ remainingLabel(o) }}</div>
+                                <div class="bar">
+                                    <div class="bar-fill" [style.width.%]="progressPct(o)"></div>
+                                </div>
+                            </div>
+                        </header>
+                        <ul class="items">
+                            @for (i of o.items; track i.id) {
+                                <li>
+                                    <div class="line">
+                                        <span class="qty">{{ i.quantity }}×</span>
+                                        <span class="name">{{ i.name }}</span>
+                                        @if (i.notes) {
+                                            <em class="notes">- {{ i.notes }}</em>
+                                        }
+                                    </div>
+                                    @if (i.modifiers.length > 0) {
+                                        <ul class="mods">
+                                            @for (m of i.modifiers; track m.id) {
+                                                <li>{{ m.groupName }}: {{ m.name }}</li>
+                                            }
+                                        </ul>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                        @if (o.deliveryNotes) {
+                            <p class="order-notes">
+                                <i class="pi pi-info-circle"></i> {{ o.deliveryNotes }}
+                            </p>
+                        }
+                    </article>
+                }
+            </section>
+        }
+    } @else if (tab() === 'tables') {
+        @if (loadingService.isLoading(TABLES_KEY) && tables().length === 0) {
+            <div class="status">
+                <i class="pi pi-spin pi-spinner"></i>
+                <p>Loading tables...</p>
+            </div>
+        } @else if (tables().length === 0) {
+            <div class="status">
+                <i class="pi pi-th-large"></i>
+                <p>No tables.</p>
+            </div>
+        } @else {
+            <section class="tables-grid">
+                @for (t of tables(); track t.id) {
+                    <article class="table-card" [class]="tableStateClass(t)">
+                        <div class="num">#{{ t.number }}</div>
+                        @if (t.label) {
+                            <div class="label">{{ t.label }}</div>
+                        }
+                        <div class="state">{{ tableStateLabel(t) }}</div>
+                        <div class="meta">
+                            <span><i class="pi pi-users"></i> {{ t.capacity }}</span>
+                            @if (t.activeOrders > 0) {
+                                <span>
+                                    <i class="pi pi-shopping-cart"></i> {{ t.activeOrders }}
+                                </span>
+                            }
+                        </div>
+                    </article>
+                }
+            </section>
+        }
+    } @else if (tab() === 'calls') {
+        @if (calls().length === 0) {
+            <div class="status">
+                <i class="pi pi-phone"></i>
+                <p>No active calls.</p>
+            </div>
+        } @else {
+            <section class="calls-list">
+                @for (c of calls(); track c.id) {
+                    <article class="call">
+                        <div class="left">
+                            <i class="pi pi-bell"></i>
+                        </div>
+                        <div class="body">
+                            <h3>Table #{{ c.tableNumber }}</h3>
+                            @if (c.tableLabel) {
+                                <p class="label">{{ c.tableLabel }}</p>
+                            }
+                            @if (c.message) {
+                                <p class="msg">{{ c.message }}</p>
+                            }
+                            <p class="time">Called {{ c.createdAt | date: 'shortTime' }}</p>
+                        </div>
+                        <button type="button" class="btn primary" (click)="acknowledgeCall(c)">
+                            <i class="pi pi-check"></i> On my way
+                        </button>
+                    </article>
+                }
+            </section>
+        }
+    }
+</div>
+
+<app-order-detail-dialog
+    [visible]="detailOpen()"
+    [orderId]="detailOrderId()"
+    [orderSeed]="detailSeed()"
+    (close)="closeDetail()"
+/>

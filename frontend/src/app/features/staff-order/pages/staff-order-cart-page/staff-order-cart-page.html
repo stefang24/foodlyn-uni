@@ -1,0 +1,128 @@
+@if (staffCart.context(); as ctx) {
+    <div class="staff-cart">
+        <header class="topbar">
+            <button type="button" class="icon-btn" (click)="back()">
+                <i class="pi pi-arrow-left"></i>
+            </button>
+            <div class="title">
+                <h1>Review order</h1>
+                <p>{{ ctx.restaurantName }} · Table #{{ ctx.tableNumber }}</p>
+            </div>
+        </header>
+
+        @if (staffCart.isEmpty()) {
+            <div class="status">
+                <i class="pi pi-shopping-cart"></i>
+                <p>Cart is empty.</p>
+                <button type="button" class="btn primary" (click)="back()">Browse menu</button>
+            </div>
+        } @else {
+            <section class="lines">
+                @for (l of staffCart.lines(); track l.lineKey) {
+                    <article class="line">
+                        <div class="info">
+                            <h3>{{ l.name }}</h3>
+                            @if (l.modifiers.length > 0) {
+                                <ul class="mods">
+                                    @for (m of l.modifiers; track m.id) {
+                                        <li>
+                                            <span>{{ m.groupName }}: {{ m.name }}</span>
+                                            @if (m.price > 0) {
+                                                <span class="mod-price">
+                                                    +{{ m.price | currency: (l.currency ?? 'USD') : 'symbol' : '1.2-2' }}
+                                                </span>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            @if (l.notes) {
+                                <p class="notes">{{ l.notes }}</p>
+                            }
+                            <p class="price">
+                                {{ l.price | currency: (l.currency ?? 'USD') : 'symbol' : '1.2-2' }}
+                            </p>
+                        </div>
+                        <div class="controls">
+                            <div class="qty-ctrl">
+                                <button type="button" (click)="dec(l.lineKey, l.quantity)">
+                                    <i class="pi pi-minus"></i>
+                                </button>
+                                <span>{{ l.quantity }}</span>
+                                <button type="button" (click)="inc(l.lineKey, l.quantity)">
+                                    <i class="pi pi-plus"></i>
+                                </button>
+                            </div>
+                            <button type="button" class="remove" (click)="remove(l.lineKey)">
+                                <i class="pi pi-trash"></i>
+                            </button>
+                        </div>
+                    </article>
+                }
+            </section>
+
+            <section class="meta">
+                <div class="field">
+                    <label>Customer name (optional)</label>
+                    <input
+                        type="text"
+                        [ngModel]="customerName()"
+                        (ngModelChange)="customerName.set($event)"
+                        placeholder="e.g. Marko"
+                    />
+                </div>
+                <div class="field">
+                    <label>Party size</label>
+                    <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        [ngModel]="partySize()"
+                        (ngModelChange)="partySize.set($event)"
+                    />
+                </div>
+                <div class="field span-2">
+                    <label>Notes (optional)</label>
+                    <textarea
+                        rows="2"
+                        [ngModel]="notes()"
+                        (ngModelChange)="notes.set($event)"
+                        placeholder="Allergies, special instructions..."
+                    ></textarea>
+                </div>
+                <div class="field span-2">
+                    <label>Payment method</label>
+                    <p-select
+                        [options]="paymentOptions"
+                        [ngModel]="paymentMethod()"
+                        (ngModelChange)="paymentMethod.set($event)"
+                        placeholder="Decide later"
+                        appendTo="body"
+                    ></p-select>
+                </div>
+            </section>
+
+            <footer class="summary">
+                <div class="totals">
+                    <span>Total</span>
+                    <strong>
+                        {{ staffCart.total() | currency: staffCart.currency() : 'symbol' : '1.2-2' }}
+                    </strong>
+                </div>
+                <button
+                    type="button"
+                    class="btn primary place"
+                    (click)="submit()"
+                    [disabled]="loadingService.isLoading(SUBMIT_KEY)"
+                >
+                    <i class="pi pi-check"></i>
+                    @if (loadingService.isLoading(SUBMIT_KEY)) {
+                        <ng-container>Placing...</ng-container>
+                    } @else {
+                        <ng-container>Place order</ng-container>
+                    }
+                </button>
+            </footer>
+        }
+    </div>
+}

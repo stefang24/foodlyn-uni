@@ -1,0 +1,105 @@
+<div class="live-page">
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">LIVE</p>
+            <h1>Live orders</h1>
+            <p class="sub">Active orders in real time, grouped by status.</p>
+        </div>
+        <div class="header-actions">
+            <p-select
+                [options]="currencyOptions()"
+                [ngModel]="displayCurrency()"
+                (ngModelChange)="setDisplayCurrency($event)"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Currency"
+                appendTo="body"
+            />
+            @if (restaurantOptions().length > 1) {
+                <p-select
+                    [options]="restaurantOptions()"
+                    [ngModel]="selectedRestaurantId()"
+                    (ngModelChange)="onRestaurantChange($event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Restaurant"
+                    appendTo="body"
+                    styleClass="restaurant-select"
+                />
+            }
+        </div>
+    </section>
+
+    @if (loading() && orders().length === 0) {
+        <div class="state">
+            <i class="pi pi-spin pi-spinner"></i>
+            <p>Loading live orders...</p>
+        </div>
+    } @else if (orders().length === 0) {
+        <div class="state">
+            <i class="pi pi-inbox"></i>
+            <p>No active orders right now.</p>
+        </div>
+    } @else {
+        <section class="columns">
+            @for (col of columns; track col.key) {
+                <div class="column">
+                    <header class="col-head">
+                        <i [class]="'pi ' + col.icon"></i>
+                        <span class="col-title">{{ col.label }}</span>
+                        <span class="col-count">{{ byStatus()[col.key].length }}</span>
+                    </header>
+                    <div class="col-body">
+                        @for (o of byStatus()[col.key]; track trackOrder($index, o)) {
+                            <article class="order-card order-clickable" [attr.data-status]="o.status" (click)="openDetail(o)">
+                                <header class="oc-head">
+                                    <div>
+                                        <div class="oc-id">#{{ o.id }}</div>
+                                        <div class="oc-table">Table {{ o.tableNumber }} · Party {{ o.partySize }}</div>
+                                    </div>
+                                    <div class="oc-total">{{ convertedTotal(o) | currency: displayCurrency() : 'symbol' : '1.2-2' }}</div>
+                                </header>
+
+                                @if (o.customerName) {
+                                    <div class="oc-customer">
+                                        <i class="pi pi-user"></i> {{ o.customerName }}
+                                    </div>
+                                }
+
+                                <ul class="oc-items">
+                                    @for (i of o.items; track i.id) {
+                                        <li>
+                                            <span class="qty">{{ i.quantity }}×</span>
+                                            <span>{{ i.name }}</span>
+                                        </li>
+                                    }
+                                </ul>
+
+                                <footer class="oc-foot">
+                                    <span class="oc-time">
+                                        <i class="pi pi-clock"></i>
+                                        {{ o.createdAt | date: 'HH:mm' }}
+                                    </span>
+                                    @if (o.paymentMethod) {
+                                        <span class="oc-pay">{{ o.paymentMethod }}</span>
+                                    }
+                                </footer>
+                            </article>
+                        }
+
+                        @if (byStatus()[col.key].length === 0) {
+                            <div class="col-empty">-</div>
+                        }
+                    </div>
+                </div>
+            }
+        </section>
+    }
+</div>
+
+<app-order-detail-dialog
+    [visible]="detailOpen()"
+    [orderId]="detailOrderId()"
+    [orderSeed]="detailSeed()"
+    (close)="closeDetail()"
+/>

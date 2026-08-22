@@ -1,0 +1,84 @@
+<div class="users-page">
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">STAFF</p>
+            <h1>Users in my restaurants</h1>
+        </div>
+    </section>
+
+    <section class="stats-row">
+        <article class="stat">
+            <div class="stat-label">Total</div>
+            <div class="stat-value">{{ totalUsers() }}</div>
+        </article>
+        <article class="stat">
+            <div class="stat-label">Active</div>
+            <div class="stat-value">{{ activeUsers() }}</div>
+        </article>
+        <article class="stat">
+            <div class="stat-label">Cooks</div>
+            <div class="stat-value">{{ byRole()['Cook'] || 0 }}</div>
+        </article>
+        <article class="stat">
+            <div class="stat-label">Waiters</div>
+            <div class="stat-value">{{ byRole()['Waiter'] || 0 }}</div>
+        </article>
+        <article class="stat">
+            <div class="stat-label">Cashiers</div>
+            <div class="stat-value">{{ byRole()['Cashier'] || 0 }}</div>
+        </article>
+    </section>
+
+    <section class="card">
+        <p-table
+            [value]="users()"
+            [paginator]="true"
+            [rows]="10"
+            [loading]="loading()"
+            class="p-datatable-sm table-card"
+            dataKey="id"
+        >
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Username</th>
+                    <th>Full name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Primary restaurant</th>
+                    <th>Assignments</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+                <tr>
+                    <td><strong>{{ row.username }}</strong></td>
+                    <td>{{ (row.firstName || '') + ' ' + (row.lastName || '') }}</td>
+                    <td>{{ row.email }}</td>
+                    <td>
+                        <span class="role-chip" [attr.data-role]="row.role">{{ row.role }}</span>
+                    </td>
+                    <td>{{ restaurantName(row.restaurantId) }}</td>
+                    <td>
+                        @if (row.restaurantIds.length) {
+                            <span class="assign-count">{{ row.restaurantIds.length }}</span>
+                        } @else {
+                            <span class="muted">none</span>
+                        }
+                    </td>
+                    <td>
+                        <span class="status-pill" [class.active]="row.isActive">
+                            {{ row.isActive ? 'Active' : 'Disabled' }}
+                        </span>
+                    </td>
+                    <td>{{ row.createdAt | date: 'mediumDate' }}</td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="8" class="empty">No users yet in your restaurants.</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </section>
+</div>

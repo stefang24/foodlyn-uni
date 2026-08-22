@@ -1,0 +1,136 @@
+$primary: rgb(125, 7, 7);
+$text-dark: #0f172a;
+$text-muted: #64748b;
+
+.users-page {
+    position: relative;
+    isolation: isolate;
+    padding: 32px 40px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-height: 100%;
+    box-sizing: border-box;
+}
+
+.page-header {
+    .eyebrow {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        color: #94a3b8;
+    }
+
+    h1 {
+        margin: 4px 0 0;
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.4px;
+        color: $text-dark;
+    }
+}
+
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.stat {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 14px;
+    padding: 14px 16px;
+
+    .stat-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        color: #94a3b8;
+        text-transform: uppercase;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: $text-dark;
+        margin-top: 2px;
+    }
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+}
+
+::ng-deep .table-card {
+    .p-datatable-thead > tr > th {
+        background: #fafafa;
+        color: $text-dark;
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .p-datatable-tbody > tr > td {
+        font-size: 14px;
+        color: $text-dark;
+    }
+}
+
+.role-chip {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(15, 23, 42, 0.08);
+    color: #334155;
+
+    &[data-role='Manager'] { background: rgba(139, 92, 246, 0.14); color: #6d28d9; }
+    &[data-role='Cashier'] { background: rgba(249, 115, 22, 0.14); color: #c2410c; }
+    &[data-role='Cook'] { background: rgba(239, 68, 68, 0.14); color: #b91c1c; }
+    &[data-role='Waiter'] { background: rgba(59, 130, 246, 0.14); color: #1d4ed8; }
+    &[data-role='StatusDisplay'] { background: rgba(20, 184, 166, 0.14); color: #0f766e; }
+    &[data-role='SuperAdmin'] { background: rgba(16, 185, 129, 0.14); color: #047857; }
+}
+
+.assign-count {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.06);
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.muted { color: $text-muted; }
+
+.status-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.08);
+    color: $text-muted;
+    font-size: 12px;
+    font-weight: 600;
+
+    &.active {
+        background: rgba(16, 185, 129, 0.14);
+        color: #047857;
+    }
+}
+
+.empty {
+    text-align: center;
+    color: $text-muted;
+    padding: 24px !important;
+}

@@ -1,0 +1,527 @@
+<p-confirmdialog />
+
+<div class="menu-mgmt">
+    <section class="page-header">
+        <div>
+            <h1>Menu management</h1>
+            <p>Build menus, group items into categories, and control every detail.</p>
+        </div>
+    </section>
+
+    <section class="card picker">
+        <div class="picker-row">
+            <div class="picker-field">
+                <label for="restaurant-select">Restaurant</label>
+                <p-select
+                    id="restaurant-select"
+                    [options]="restaurantOptions()"
+                    optionLabel="label"
+                    optionValue="value"
+                    [ngModel]="selectedRestaurantId()"
+                    (ngModelChange)="onRestaurantChange($event)"
+                    placeholder="Select restaurant"
+                    appendTo="body"
+                />
+            </div>
+
+            <div class="picker-field">
+                <label>Menu</label>
+                <div class="menu-chips">
+                    @for (m of menus(); track m.id) {
+                        <button
+                            type="button"
+                            class="chip"
+                            [class.active]="m.id === selectedMenuId()"
+                            (click)="selectMenu(m.id)"
+                        >
+                            {{ m.name }}
+                            @if (!m.isPublished) {
+                                <small>draft</small>
+                            }
+                        </button>
+                    } @empty {
+                        <span class="muted">No menus yet.</span>
+                    }
+                </div>
+            </div>
+
+            <div class="picker-actions">
+                <button type="button" class="btn primary" (click)="openCreateMenu()" [disabled]="selectedRestaurantId() == null">
+                    <i class="pi pi-plus"></i> New menu
+                </button>
+            </div>
+        </div>
+    </section>
+
+    @if (selectedMenu(); as menu) {
+        <section class="card menu-header-card">
+            <div class="menu-head">
+                <div>
+                    <h2>{{ menu.name }}</h2>
+                    @if (menu.description) {
+                        <p>{{ menu.description }}</p>
+                    }
+                    <div class="tagline">
+                        <span class="status-pill" [class.active]="menu.isActive">
+                            {{ menu.isActive ? 'Active' : 'Inactive' }}
+                        </span>
+                        <span class="status-pill" [class.published]="menu.isPublished">
+                            {{ menu.isPublished ? 'Published' : 'Draft' }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="menu-head-actions">
+                    <button type="button" class="btn ghost" (click)="openEditMenu(menu)">
+                        <i class="pi pi-pencil"></i> Edit menu
+                    </button>
+                    <button type="button" class="btn danger" (click)="deleteMenu(menu)">
+                        <i class="pi pi-trash"></i> Delete
+                    </button>
+                    <button type="button" class="btn primary" (click)="openCreateCategory()">
+                        <i class="pi pi-plus"></i> New category
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        @for (category of menu.categories; track category.id) {
+            <section class="card category">
+                <header class="cat-head">
+                    <div>
+                        <h3>{{ category.name }}</h3>
+                        @if (category.description) {
+                            <p>{{ category.description }}</p>
+                        }
+                    </div>
+                    <div class="cat-actions">
+                        <button type="button" class="btn ghost" (click)="openEditCategory(category)">
+                            <i class="pi pi-pencil"></i> Edit
+                        </button>
+                        <button type="button" class="btn danger" (click)="deleteCategory(category)">
+                            <i class="pi pi-trash"></i>
+                        </button>
+                        <button type="button" class="btn primary" (click)="openCreateItem(category)">
+                            <i class="pi pi-plus"></i> Add item
+                        </button>
+                    </div>
+                </header>
+
+                <div class="items-grid">
+                    @for (item of category.items; track item.id) {
+                        <app-menu-item-card
+                            [item]="item"
+                            [editable]="true"
+                            [currency]="restaurantCurrency()"
+                            (edit)="openEditItem($event)"
+                            (remove)="deleteItem($event)"
+                        />
+                    } @empty {
+                        <p class="muted empty">No items in this category yet.</p>
+                    }
+                </div>
+            </section>
+        } @empty {
+            <section class="card empty-state">
+                <p>No categories in this menu. Start by creating one.</p>
+                <button type="button" class="btn primary" (click)="openCreateCategory()">
+                    <i class="pi pi-plus"></i> New category
+                </button>
+            </section>
+        }
+    } @else if (selectedRestaurantId() != null) {
+        <section class="card empty-state">
+            <p>No menus for this restaurant. Create the first one.</p>
+            <button type="button" class="btn primary" (click)="openCreateMenu()">
+                <i class="pi pi-plus"></i> New menu
+            </button>
+        </section>
+    }
+</div>
+
+<p-dialog
+    [visible]="menuDialog()"
+    (visibleChange)="$event ? menuDialog.set(true) : menuDialog.set(false)"
+    [modal]="true"
+    [style]="{ width: '640px' }"
+    [header]="editingMenu ? 'Edit menu' : 'New menu'"
+    [dismissableMask]="true"
+>
+    <form [formGroup]="menuForm" (ngSubmit)="saveMenu()" class="edit-form">
+        <div class="grid">
+            <div class="field span-2">
+                <label for="m-name">Name *</label>
+                <input pInputText id="m-name" type="text" formControlName="name" />
+            </div>
+            <div class="field span-2">
+                <label for="m-desc">Description</label>
+                <textarea pTextarea id="m-desc" rows="3" formControlName="description"></textarea>
+            </div>
+        </div>
+        <div class="images-row">
+            <div class="field">
+                <label>Image</label>
+                <app-image-upload formControlName="imageUrl" folder="menus" />
+            </div>
+            <div class="field">
+                <label>Banner</label>
+                <app-image-upload formControlName="bannerImageUrl" folder="menus" />
+            </div>
+        </div>
+        <div class="grid">
+            <div class="field">
+                <label for="m-sort">Sort order</label>
+                <input pInputText id="m-sort" type="number" formControlName="sortOrder" />
+            </div>
+            <div class="field toggle-field">
+                <label>Active</label>
+                <p-toggleswitch formControlName="isActive" />
+            </div>
+            <div class="field toggle-field">
+                <label>Published</label>
+                <p-toggleswitch formControlName="isPublished" />
+            </div>
+        </div>
+
+        <div class="actions-row">
+            <button type="button" class="btn ghost" (click)="menuDialog.set(false)">Cancel</button>
+            <button
+                type="submit"
+                class="btn primary"
+                [disabled]="menuForm.invalid || loadingService.isLoading(SAVE_MENU_KEY)"
+            >
+                @if (loadingService.isLoading(SAVE_MENU_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                } @else {
+                    Save
+                }
+            </button>
+        </div>
+    </form>
+</p-dialog>
+
+<p-dialog
+    [visible]="categoryDialog()"
+    (visibleChange)="$event ? categoryDialog.set(true) : categoryDialog.set(false)"
+    [modal]="true"
+    [style]="{ width: '560px' }"
+    [header]="editingCategory ? 'Edit category' : 'New category'"
+    [dismissableMask]="true"
+>
+    <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()" class="edit-form">
+        <div class="grid">
+            <div class="field span-2">
+                <label for="c-name">Name *</label>
+                <input pInputText id="c-name" type="text" formControlName="name" />
+            </div>
+            <div class="field span-2">
+                <label for="c-desc">Description</label>
+                <textarea pTextarea id="c-desc" rows="3" formControlName="description"></textarea>
+            </div>
+        </div>
+        <div class="images-row">
+            <div class="field">
+                <label>Image</label>
+                <app-image-upload formControlName="imageUrl" folder="menus/categories" />
+            </div>
+        </div>
+        <div class="grid">
+            <div class="field">
+                <label for="c-icon">Icon</label>
+                <input pInputText id="c-icon" type="text" formControlName="icon" />
+            </div>
+            <div class="field">
+                <label for="c-sort">Sort order</label>
+                <input pInputText id="c-sort" type="number" formControlName="sortOrder" />
+            </div>
+            <div class="field toggle-field">
+                <label>Active</label>
+                <p-toggleswitch formControlName="isActive" />
+            </div>
+        </div>
+
+        <div class="actions-row">
+            <button type="button" class="btn ghost" (click)="categoryDialog.set(false)">Cancel</button>
+            <button
+                type="submit"
+                class="btn primary"
+                [disabled]="categoryForm.invalid || loadingService.isLoading(SAVE_CATEGORY_KEY)"
+            >
+                @if (loadingService.isLoading(SAVE_CATEGORY_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                } @else {
+                    Save
+                }
+            </button>
+        </div>
+    </form>
+</p-dialog>
+
+<p-dialog
+    [visible]="itemDialog()"
+    (visibleChange)="$event ? itemDialog.set(true) : itemDialog.set(false)"
+    [modal]="true"
+    [style]="{ width: '820px' }"
+    [header]="editingItem ? 'Edit item' : 'New item'"
+    [dismissableMask]="true"
+>
+    <form [formGroup]="itemForm" (ngSubmit)="saveItem()" class="edit-form">
+        <div class="grid">
+            <div class="field span-2">
+                <label for="i-name">Name *</label>
+                <input pInputText id="i-name" type="text" formControlName="name" />
+            </div>
+            <div class="field span-2">
+                <label for="i-short">Short description</label>
+                <input pInputText id="i-short" type="text" formControlName="shortDescription" />
+            </div>
+            <div class="field span-2">
+                <label for="i-desc">Description</label>
+                <textarea pTextarea id="i-desc" rows="3" formControlName="description"></textarea>
+            </div>
+        </div>
+        <div class="images-row">
+            <div class="field">
+                <label>Image</label>
+                <app-image-upload formControlName="imageUrl" folder="menus/items" />
+            </div>
+        </div>
+        <div class="grid">
+            <div class="field">
+                <label for="i-price">Price *</label>
+                <input pInputText id="i-price" type="number" step="0.01" formControlName="price" />
+            </div>
+            <div class="field">
+                <label for="i-disc">Discounted price</label>
+                <input pInputText id="i-disc" type="number" step="0.01" formControlName="discountedPrice" />
+            </div>
+
+            <div class="field">
+                <label for="i-cal">Calories</label>
+                <input pInputText id="i-cal" type="number" formControlName="calories" />
+            </div>
+            <div class="field">
+                <label for="i-prep">Prep time (min)</label>
+                <input pInputText id="i-prep" type="number" formControlName="preparationTimeMinutes" />
+            </div>
+            <div class="field">
+                <label for="i-ssize">Serving size (g)</label>
+                <input pInputText id="i-ssize" type="number" formControlName="servingSizeGrams" />
+            </div>
+
+            <div class="field">
+                <label for="i-spic">Spiciness</label>
+                <p-select
+                    id="i-spic"
+                    formControlName="spicinessLevel"
+                    [options]="spicinessOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    appendTo="body"
+                />
+            </div>
+            <div class="field">
+                <label for="i-stock">Stock</label>
+                <input pInputText id="i-stock" type="number" formControlName="stockQuantity" />
+            </div>
+            <div class="field">
+                <label for="i-sort">Sort order</label>
+                <input pInputText id="i-sort" type="number" formControlName="sortOrder" />
+            </div>
+
+            <div class="field span-2">
+                <label for="i-allerg">Allergens (comma separated)</label>
+                <input pInputText id="i-allerg" type="text" formControlName="allergensCsv" />
+            </div>
+            <div class="field span-2">
+                <label for="i-tags">Tags (comma separated)</label>
+                <input pInputText id="i-tags" type="text" formControlName="tagsCsv" />
+            </div>
+            <div class="field span-2">
+                <label for="i-ingr">Ingredients (comma separated)</label>
+                <input pInputText id="i-ingr" type="text" formControlName="ingredientsCsv" />
+            </div>
+        </div>
+
+        <div class="toggles-grid">
+            <div class="field toggle-field">
+                <label>Vegetarian</label>
+                <p-toggleswitch formControlName="isVegetarian" />
+            </div>
+            <div class="field toggle-field">
+                <label>Vegan</label>
+                <p-toggleswitch formControlName="isVegan" />
+            </div>
+            <div class="field toggle-field">
+                <label>Gluten free</label>
+                <p-toggleswitch formControlName="isGlutenFree" />
+            </div>
+            <div class="field toggle-field">
+                <label>Dairy free</label>
+                <p-toggleswitch formControlName="isDairyFree" />
+            </div>
+            <div class="field toggle-field">
+                <label>Halal</label>
+                <p-toggleswitch formControlName="isHalal" />
+            </div>
+            <div class="field toggle-field">
+                <label>Kosher</label>
+                <p-toggleswitch formControlName="isKosher" />
+            </div>
+            <div class="field toggle-field">
+                <label>Featured</label>
+                <p-toggleswitch formControlName="isFeatured" />
+            </div>
+            <div class="field toggle-field">
+                <label>New</label>
+                <p-toggleswitch formControlName="isNew" />
+            </div>
+            <div class="field toggle-field">
+                <label>Available</label>
+                <p-toggleswitch formControlName="isAvailable" />
+            </div>
+            <div class="field toggle-field">
+                <label>Active</label>
+                <p-toggleswitch formControlName="isActive" />
+            </div>
+        </div>
+
+        <div class="modifier-section">
+            <header class="mod-section-head">
+                <h3>Modifier groups</h3>
+                <p>Sections like "Sauce" or "Toppings" with selection limits and per-option pricing.</p>
+                @if (!editingItem) {
+                    <p class="hint">Drafts will be saved together with the item.</p>
+                }
+            </header>
+
+                <div class="mod-add-group">
+                    <input
+                        pInputText
+                        type="text"
+                        placeholder="Group name (e.g. Toppings)"
+                        [ngModel]="newGroupName()"
+                        (ngModelChange)="newGroupName.set($event)"
+                        [ngModelOptions]="{ standalone: true }"
+                    />
+                    <input
+                        pInputText
+                        type="number"
+                        placeholder="Min"
+                        [ngModel]="newGroupMin()"
+                        (ngModelChange)="newGroupMin.set($event)"
+                        [ngModelOptions]="{ standalone: true }"
+                        min="0"
+                    />
+                    <input
+                        pInputText
+                        type="number"
+                        placeholder="Max"
+                        [ngModel]="newGroupMax()"
+                        (ngModelChange)="newGroupMax.set($event)"
+                        [ngModelOptions]="{ standalone: true }"
+                        min="1"
+                    />
+                    <button type="button" class="btn primary small" (click)="addModifierGroup()">
+                        <i class="pi pi-plus"></i> Add group
+                    </button>
+                </div>
+
+                <div class="mod-groups">
+                    @for (group of editingItemGroups(); track group.id) {
+                        <article class="mod-group-card">
+                            <header class="mod-group-head">
+                                @if (editingGroupId() === group.id) {
+                                    <input pInputText type="text"
+                                        [ngModel]="editingGroupName()"
+                                        (ngModelChange)="editingGroupName.set($event)"
+                                        [ngModelOptions]="{ standalone: true }" />
+                                    <input pInputText type="number" min="0"
+                                        [ngModel]="editingGroupMin()"
+                                        (ngModelChange)="editingGroupMin.set($event)"
+                                        [ngModelOptions]="{ standalone: true }" />
+                                    <input pInputText type="number" min="1"
+                                        [ngModel]="editingGroupMax()"
+                                        (ngModelChange)="editingGroupMax.set($event)"
+                                        [ngModelOptions]="{ standalone: true }" />
+                                    <button type="button" class="btn primary small" (click)="saveEditGroup(group)">Save</button>
+                                    <button type="button" class="btn ghost small" (click)="cancelEditGroup()">Cancel</button>
+                                } @else {
+                                    <div class="info">
+                                        <h4>{{ group.name }}</h4>
+                                        <span class="rule">Pick {{ group.minSelect }}–{{ group.maxSelect }}</span>
+                                    </div>
+                                    <div class="actions">
+                                        <button type="button" class="icon-btn" (click)="startEditGroup(group)">
+                                            <i class="pi pi-pencil"></i>
+                                        </button>
+                                        <button type="button" class="icon-btn danger" (click)="deleteModifierGroup(group)">
+                                            <i class="pi pi-trash"></i>
+                                        </button>
+                                    </div>
+                                }
+                            </header>
+
+                            <ul class="mod-list">
+                                @for (mod of group.modifiers; track mod.id) {
+                                    <li>
+                                        @if (editingModifierId() === mod.id) {
+                                            <input pInputText type="text"
+                                                [ngModel]="editingModifierName()"
+                                                (ngModelChange)="editingModifierName.set($event)"
+                                                [ngModelOptions]="{ standalone: true }" />
+                                            <input pInputText type="number" step="0.01" min="0"
+                                                [ngModel]="editingModifierPrice()"
+                                                (ngModelChange)="editingModifierPrice.set($event)"
+                                                [ngModelOptions]="{ standalone: true }" />
+                                            <button type="button" class="btn primary small" (click)="saveEditModifier(mod)">Save</button>
+                                            <button type="button" class="btn ghost small" (click)="cancelEditModifier()">Cancel</button>
+                                        } @else {
+                                            <span class="mod-name">{{ mod.name }}</span>
+                                            <span class="mod-price">
+                                                @if (mod.priceDelta > 0) { +{{ mod.priceDelta | currency }} } @else { Free }
+                                            </span>
+                                            <button type="button" class="icon-btn" (click)="startEditModifier(mod)">
+                                                <i class="pi pi-pencil"></i>
+                                            </button>
+                                            <button type="button" class="icon-btn danger" (click)="deleteModifier(mod)">
+                                                <i class="pi pi-trash"></i>
+                                            </button>
+                                        }
+                                    </li>
+                                }
+                                <li class="add-mod-row">
+                                    <input pInputText type="text" placeholder="Option name"
+                                        [ngModel]="getModName(group.id)"
+                                        (ngModelChange)="setModName(group.id, $event)"
+                                        [ngModelOptions]="{ standalone: true }" />
+                                    <input pInputText type="number" step="0.01" min="0" placeholder="0 = free"
+                                        [ngModel]="getModPrice(group.id)"
+                                        (ngModelChange)="setModPrice(group.id, $event)"
+                                        [ngModelOptions]="{ standalone: true }" />
+                                    <button type="button" class="btn ghost small" (click)="addModifier(group)">
+                                        <i class="pi pi-plus"></i> Add option
+                                    </button>
+                                </li>
+                            </ul>
+                        </article>
+                    }
+                </div>
+        </div>
+
+        <div class="actions-row">
+            <button type="button" class="btn ghost" (click)="itemDialog.set(false)">Cancel</button>
+            <button
+                type="submit"
+                class="btn primary"
+                [disabled]="itemForm.invalid || loadingService.isLoading(SAVE_ITEM_KEY)"
+            >
+                @if (loadingService.isLoading(SAVE_ITEM_KEY)) {
+                    <i class="pi pi-spin pi-spinner"></i>
+                } @else {
+                    Save
+                }
+            </button>
+        </div>
+    </form>
+</p-dialog>

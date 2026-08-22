@@ -1,0 +1,248 @@
+<div class="orders-page">
+    <section class="page-header">
+        <div>
+            <p class="eyebrow">ORDERS</p>
+            <h1>All orders</h1>
+            <p class="sub">Historical and recent orders. Click any row to see details.</p>
+        </div>
+        <div class="header-actions">
+            <p-select
+                [options]="currencyOptions()"
+                [ngModel]="displayCurrency()"
+                (ngModelChange)="setDisplayCurrency($event)"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Currency"
+                appendTo="body"
+            />
+            <p-select
+                [options]="restaurantOptions()"
+                [ngModel]="selectedRestaurantId()"
+                (ngModelChange)="onRestaurantChange($event)"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="All restaurants"
+                appendTo="body"
+            />
+        </div>
+    </section>
+
+    <section class="summary">
+        <article class="sum">
+            <div class="sum-label">Orders</div>
+            <div class="sum-value">{{ summary().count }}</div>
+        </article>
+        <article class="sum">
+            <div class="sum-label">Total value</div>
+            <div class="sum-value">{{ summary().total | currency: displayCurrency() : 'symbol' : '1.2-2' }}</div>
+        </article>
+        <article class="sum">
+            <div class="sum-label">Avg order</div>
+            <div class="sum-value">{{ summary().avg | currency: displayCurrency() : 'symbol' : '1.2-2' }}</div>
+        </article>
+    </section>
+
+    <section class="filters">
+        <div class="search">
+            <i class="pi pi-search"></i>
+            <input
+                type="text"
+                placeholder="Search by #ID, table, customer, item..."
+                [value]="query()"
+                (input)="onSearchChange($any($event.target).value)"
+            />
+        </div>
+        <p-select
+            [options]="statusOptions"
+            [ngModel]="filterStatus()"
+            (ngModelChange)="setStatusFilter($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Status"
+            appendTo="body"
+        />
+        <p-select
+            [options]="paymentOptions"
+            [ngModel]="filterPayment()"
+            (ngModelChange)="setPaymentFilter($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Payment"
+            appendTo="body"
+        />
+        <div class="range-chips">
+            @for (r of rangeOptions; track r.value) {
+                <button
+                    type="button"
+                    class="chip"
+                    [class.active]="filterRange() === r.value"
+                    (click)="setRange(r.value)"
+                >
+                    {{ r.label }}
+                </button>
+            }
+        </div>
+    </section>
+
+    <section class="card">
+        <p-table
+            [value]="orders()"
+            [lazy]="true"
+            [paginator]="true"
+            [rows]="10"
+            [totalRecords]="totalCount()"
+            [loading]="loading()"
+            (onLazyLoad)="onLazyLoad($event)"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [sortMode]="'single'"
+            class="p-datatable-sm table-card"
+            dataKey="id"
+            [rowHover]="true"
+        >
+            <ng-template pTemplate="header">
+                <tr>
+                    <th pSortableColumn="id">#ID <p-sortIcon field="id" /></th>
+                    <th pSortableColumn="tableNumber">Table <p-sortIcon field="tableNumber" /></th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th pSortableColumn="totalAmount">Amount <p-sortIcon field="totalAmount" /></th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th pSortableColumn="createdAt">Placed <p-sortIcon field="createdAt" /></th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+                <tr (click)="openDetail(row)" class="clickable">
+                    <td><strong>#{{ row.id }}</strong></td>
+                    <td>Table {{ row.tableNumber }}</td>
+                    <td>{{ row.customerName || '-' }}</td>
+                    <td>{{ row.items.length }} item{{ row.items.length === 1 ? '' : 's' }}</td>
+                    <td class="amount">{{ convertAmount(row.totalAmount, row.currency) | currency: displayCurrency() : 'symbol' : '1.2-2' }}</td>
+                    <td>
+                        @if (row.paymentMethod) {
+                            <span class="pay-chip" [attr.data-pay]="row.paymentMethod">{{ row.paymentMethod }}</span>
+                        } @else {
+                            <span class="muted">-</span>
+                        }
+                    </td>
+                    <td>
+                        <span [class]="'status-pill ' + statusClass(row.status)">{{ row.status }}</span>
+                    </td>
+                    <td>{{ row.createdAt | date: 'short' }}</td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="8" class="empty">No orders match the filters.</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </section>
+</div>
+
+<p-dialog
+    [visible]="detailOpen()"
+    (visibleChange)="$event ? detailOpen.set(true) : closeDetail()"
+    [modal]="true"
+    [dismissableMask]="true"
+    [style]="{ width: '560px' }"
+    header="Order details"
+>
+    @if (detail(); as o) {
+        <div class="detail">
+            <section class="d-row">
+                <div>
+                    <div class="d-label">Order</div>
+                    <div class="d-val big">#{{ o.id }}</div>
+                </div>
+                <div>
+                    <div class="d-label">Status</div>
+                    <span [class]="'status-pill ' + statusClass(o.status)">{{ o.status }}</span>
+                </div>
+                <div>
+                    <div class="d-label">Total</div>
+                    <div class="d-val big accent">{{ convertAmount(o.totalAmount, o.currency) | currency: displayCurrency() : 'symbol' : '1.2-2' }}</div>
+                </div>
+            </section>
+
+            <section class="d-grid">
+                <div>
+                    <div class="d-label">Table</div>
+                    <div class="d-val">{{ o.tableNumber }}@if (o.tableLabel) { · {{ o.tableLabel }} }</div>
+                </div>
+                <div>
+                    <div class="d-label">Party size</div>
+                    <div class="d-val">{{ o.partySize }}</div>
+                </div>
+                <div>
+                    <div class="d-label">Customer</div>
+                    <div class="d-val">{{ o.customerName || '-' }}</div>
+                </div>
+                <div>
+                    <div class="d-label">Placed by user</div>
+                    <div class="d-val">{{ o.createdBy ? '#' + o.createdBy : 'Guest' }}</div>
+                </div>
+                <div>
+                    <div class="d-label">Payment</div>
+                    <div class="d-val">{{ o.paymentMethod || '-' }}</div>
+                </div>
+                <div>
+                    <div class="d-label">Placed at</div>
+                    <div class="d-val">{{ o.createdAt | date: 'short' }}</div>
+                </div>
+                @if (o.approvedAt) {
+                    <div><div class="d-label">Approved</div><div class="d-val">{{ o.approvedAt | date: 'short' }}</div></div>
+                }
+                @if (o.preparingStartedAt) {
+                    <div><div class="d-label">Preparing since</div><div class="d-val">{{ o.preparingStartedAt | date: 'short' }}</div></div>
+                }
+                @if (o.readyAt) {
+                    <div><div class="d-label">Ready</div><div class="d-val">{{ o.readyAt | date: 'short' }}</div></div>
+                }
+                @if (o.servedAt) {
+                    <div><div class="d-label">Served</div><div class="d-val">{{ o.servedAt | date: 'short' }}</div></div>
+                }
+                @if (o.paidAt) {
+                    <div><div class="d-label">Paid</div><div class="d-val">{{ o.paidAt | date: 'short' }}</div></div>
+                }
+                @if (o.completedAt) {
+                    <div><div class="d-label">Completed</div><div class="d-val">{{ o.completedAt | date: 'short' }}</div></div>
+                }
+                @if (o.rejectedAt) {
+                    <div><div class="d-label">Rejected</div><div class="d-val">{{ o.rejectedAt | date: 'short' }}</div></div>
+                }
+                @if (o.cancelledAt) {
+                    <div><div class="d-label">Cancelled</div><div class="d-val">{{ o.cancelledAt | date: 'short' }}</div></div>
+                }
+            </section>
+
+            @if (o.rejectedReason) {
+                <section class="d-note">
+                    <div class="d-label">Rejection reason</div>
+                    <p>{{ o.rejectedReason }}</p>
+                </section>
+            }
+
+            @if (o.deliveryNotes) {
+                <section class="d-note">
+                    <div class="d-label">Delivery notes</div>
+                    <p>{{ o.deliveryNotes }}</p>
+                </section>
+            }
+
+            <section>
+                <div class="d-label">Items</div>
+                <ul class="d-items">
+                    @for (i of o.items; track i.id) {
+                        <li>
+                            <span class="qty">{{ i.quantity }}×</span>
+                            <span class="name">{{ i.name }}</span>
+                            @if (i.notes) { <span class="note">- {{ i.notes }}</span> }
+                            <span class="line-total">{{ convertAmount(i.price * i.quantity, o.currency) | currency: displayCurrency() : 'symbol' : '1.2-2' }}</span>
+                        </li>
+                    }
+                </ul>
+            </section>
+        </div>
+    }
+</p-dialog>
